@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import Logo from '../components/ui/Logo';
 
-export default function Login() {
+export default function OTPform() {
 
     // const [formData, setFormData] = useState({
     //     username: "",
@@ -32,7 +31,7 @@ export default function Login() {
     // };
 
     return (
-        <div className='login'>  
+        <div className='register'>  
             <section className='max-h-full max-w-full grid sm:grid-cols-3'>
             <div className="col-span-1 flex bg-red-500 max-sm:hidden"></div>
                 <div className='col-span-2 grid grid-rows-8'>

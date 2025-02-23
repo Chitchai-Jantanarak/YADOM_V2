@@ -10,13 +10,13 @@
 }
 
 :root {
-  --primary-color: #F9506C;
-  --secondary-color: #FFBE85;
-  --tertiary-color: #0C9DF8;
-  --background-color: #FDFDFD; 
-  --title-text-color: #413707; 
-  --formal-text-color: #343E45;
-  --link-color: #1D4ED8;
+  --primary-color: rgb(249, 80, 108);
+  --secondary-color: rgb(255, 190, 133);
+  --tertiary-color: rgb(12, 157, 248);
+  --background-color: rgb(253, 253, 253); 
+  --title-text-color: rgb(65, 55, 7); 
+  --formal-text-color: rgb(52, 62, 69);
+  --link-color: rgb(29, 78, 216);
 
   /* Font settings */
   --font-normal: 'Anybody', cursive;
@@ -105,6 +105,40 @@ section {
   width: 100%;
   /* padding: 0 40px; */
 }
+/* --------- Utilities --------- */
+/* text-shadow */
+
+.util-textshadow-primary {
+  transition: text-shadow ease .3s;
+}
+.util-textshadow-secondary {
+  transition: text-shadow ease .3s;
+}
+.util-textshadow-tertiary {
+  transition: text-shadow ease .3s;
+}
+.util-textshadow-default {
+  transition: text-shadow ease .3s;
+}
+.util-textshadow-black {
+  transition: text-shadow ease .3s;
+}
+.util-textshadow-primary:hover {
+  text-shadow: 1px 1px 4px rgba(249, 80, 108, 0.7);
+}
+.util-textshadow-secondary:hover {
+  text-shadow: 1px 1px 4px rgba(255, 190, 133, 0.7);
+}
+.util-textshadow-tertiary:hover {
+  text-shadow: 1px 1px 4px rgba(12, 157, 248, 0.7);
+}
+.util-textshadow-default:hover {
+  text-shadow: 1px 1px 4px rgba(255, 255, 255, 0.7);
+}
+.util-textshadow-black:hover {
+  text-shadow: 1px 1px 12px rgba(0, 0, 0, 0.7);
+}
+
 
 .ui-textcarousel-parallax {
   overflow: hidden;

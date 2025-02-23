@@ -3,7 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Footer from '../components/layout/Footer';
 import TextCarousel from '../components/ui/TextCarousel';
-import Starter from './Starter';
+
+import Login from './Login';
+import OTPform from '../components/layout/OTPForm';
+import Starter from './Starter.jsx'
 
 export default function Home() {
 
@@ -36,6 +39,8 @@ export default function Home() {
 
             <Footer /> */}
 
+            {/* <Login /> */}
+            {/* <OTPform /> */}
             <Starter />
         </>
     );

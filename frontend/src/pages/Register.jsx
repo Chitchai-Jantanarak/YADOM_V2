@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import Logo from '../components/ui/Logo';
 
 export default function Register() {
 
@@ -33,21 +34,19 @@ export default function Register() {
     return (
         <div className='register'>  
             <section className='max-h-full max-w-full grid sm:grid-cols-3'>
-
+            <div className="col-span-1 flex bg-red-500 max-sm:hidden"></div>
                 <div className='col-span-2 grid grid-rows-8'>
 
                     {/* header */}
                     <div className='row-span-1 flex justify-between items-center p-5 m-0 w-full'>   
-                        <div className="register-header-title">
-                            <p> YADOMMM </p>
-                        </div>
+                        <Logo />
 
                         <div className="flex items-center space-x-4">
-                            <span className="font-montserrat font-extralight text-xs max-sm:hidden">
+                            <span className="font-montserrat font-extralight text-xs">
                                 No Account yet?
                             </span> 
                             <Link to="/register">
-                                <button className="font-montserrat font-medium px-5 py-2 border border-black">
+                                <button className="font-montserrat font-medium px-5 py-2 border border-black transition-all duration-300 hover:bg-black hover:text-white">
                                     Sign up
                                 </button>
                             </Link>
@@ -55,7 +54,7 @@ export default function Register() {
                     </div>
 
                     {/* content */}
-                    <div className="row-span-7 register-grid-primary flex items-center justify-center">
+                    <div className="row-span-7 flex items-center justify-center">
                         <div className='inline-block font-poppins text-center w-2/3 space-y-5'>
                             <h1 className='font-extrabold text-3xl'>
                                 login
@@ -103,14 +102,14 @@ export default function Register() {
                                 </div>
                                 
                                 <Link to="/">
-                                    <p className='font-montserrat font-light text-sm text-right pt-3'> Forgot Password? </p>
+                                    <p className='font-montserrat font-light text-sm text-right pt-3 hover:underline'> Forgot Password? </p>
                                 </Link>
 
                                 {/* Submit Button */}
                                 <div>
                                     <button
                                         type="submit"
-                                        className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                                        className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
                                     >
                                         Login
                                     </button>
@@ -119,8 +118,6 @@ export default function Register() {
                         </div>
                     </div>
                 </div>
-
-                <div className="register-grid-secondary col-span-1 flex"></div>
 
             </section>
         </div>
