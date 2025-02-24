@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Logo from '../components/ui/Logo';
+import PageTransition from '../components/layout/PageTransition';
 
-export default function Login() {
+const Login = () => {
 
     // const [formData, setFormData] = useState({
     //     username: "",
@@ -33,9 +34,8 @@ export default function Login() {
 
     return (
         <div className='login'>  
-            <section className='max-h-full max-w-full grid sm:grid-cols-3'>
-            <div className="col-span-1 flex bg-red-500 max-sm:hidden"></div>
-                <div className='col-span-2 grid grid-rows-8'>
+            <section className='max-h-full max-w-full grid sm:grid-cols-5'>
+                <div className='col-span-3 grid grid-rows-8'>
 
                     {/* header */}
                     <div className='row-span-1 flex justify-between items-center p-5 m-0 w-full'>   
@@ -101,7 +101,7 @@ export default function Login() {
                                     />
                                 </div>
                                 
-                                <Link to="/">
+                                <Link to="/PasswordForgot">
                                     <p className='font-montserrat font-light text-sm text-right pt-3 hover:underline'> Forgot Password? </p>
                                 </Link>
 
@@ -118,8 +118,12 @@ export default function Login() {
                         </div>
                     </div>
                 </div>
+                <div className="col-span-2 flex bg-red-500 max-sm:hidden"></div>
+
 
             </section>
         </div>
     );
 }
+
+export default PageTransition(Login);

@@ -5,7 +5,7 @@ import Footer from '../components/layout/Footer';
 import TextCarousel from '../components/ui/TextCarousel';
 
 import Login from './Login';
-import OTPform from '../components/layout/OTPForm';
+import PasswordForgot from './PasswordForgot.jsx';
 import Starter from './Starter.jsx'
 
 export default function Home() {
@@ -42,6 +42,7 @@ export default function Home() {
             {/* <Login /> */}
             {/* <OTPform /> */}
             <Starter />
+            {/* <PasswordForgot /> */}
         </>
     );
 }

@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import Logo from '../components/ui/Logo';
 
-export default function Register() {
+import PageTransition from '../components/layout/PageTransition';
+import Logo from '../components/ui/Logo';
+import { countryCodes } from '../utils/CountryCode';
+
+const Register = () => {
+
+    const [selectedCountry, setSelectedCountry] = useState("+66");
+
+    const handleCountryChange = (e) => {
+        setSelectedCountry(e.target.value);
+    };
 
     // const [formData, setFormData] = useState({
     //     username: "",
@@ -45,9 +54,9 @@ export default function Register() {
                             <span className="font-montserrat font-extralight text-xs">
                                 No Account yet?
                             </span> 
-                            <Link to="/register">
+                            <Link to="/login">
                                 <button className="font-montserrat font-medium px-5 py-2 border border-black transition-all duration-300 hover:bg-black hover:text-white">
-                                    Sign up
+                                    Login
                                 </button>
                             </Link>
                         </div>
@@ -55,55 +64,106 @@ export default function Register() {
 
                     {/* content */}
                     <div className="row-span-7 flex items-center justify-center">
-                        <div className='inline-block font-poppins text-center w-2/3 space-y-5'>
+                        <div className='inline-block font-poppins w-2/3 space-y-5'>
                             <h1 className='font-extrabold text-3xl'>
-                                login
+                                Create an Account
                             </h1>
-                            <h2 className='font-montserrat font-light text-sm text-black tracking-wider'>
-                                PLEASE LOGIN TO CONTINUE TO YOUR ACCOUNT
-                            </h2>
-
+    
                             {/* Form */}
-                            <form className="space-y-3">
-                                {/* Email Field */}
-                                <div className="space-y-2">
-                                    <label
-                                        htmlFor="email"
-                                        className="block text-left font-extrabold"
+                            <form className="space-y-4">
+                                {/* Account Field */}
+                                <h2 className='font-anybody font-light text-sm text-gray-400 tracking-wider'>
+                                    Account Details
+                                </h2>
+                                    {/* First Name */}
+                                    <div className="space-y-2">
+                                        <input
+                                            type="firstName"
+                                            id="firstName"
+                                            name="firstName"
+                                            placeholder="First Name"
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
+                                    {/* Last Name */}
+                                    <div className="space-y-2">
+                                        <input
+                                            type="lastName"
+                                            id="lastName"
+                                            name="lastName"
+                                            placeholder="Last Name"
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
+                                    {/* Email */}
+                                    <div className="space-y-2">
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            name="email"
+                                            placeholder="Enter your email"
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
+                                    {/* Phone number */}
+                                    <div className='flex space-x-2 flex-row w-full'>
+                                    <select
+                                        className="select select-bordered w-full max-w-24"
+                                        value={selectedCountry}
+                                        onChange={handleCountryChange}
                                     >
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        placeholder="Enter your email"
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                        <option disabled value="+66">+66</option>
+                                        {countryCodes.map((country) => (
+                                            <option key={country.code} value={country.code}>
+                                                {country.code}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                        <div className="space-y-2 w-full">
+                                            <input
+                                                type="phoneNumber"
+                                                id="phoneNumber"
+                                                name="phoneNumber"
+                                                placeholder="Phone Number"
+                                                className="input input-bordered w-full"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    
 
                                 {/* Password Field */}
-                                <div className='space-y-2'>
-                                    <label
-                                        htmlFor="password"
-                                        className="block text-left font-extrabold"
-                                    >
-                                        Password
-                                    </label>
-                                    <input
-                                        type="password"
-                                        id="password"
-                                        name="password"
-                                        placeholder="Enter your password"
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
+                                <h2 className='font-anybody font-light text-sm text-gray-400 tracking-wider'>
+                                    Create Password
+                                </h2>
+                                    {/* Password */}
+                                    <div className="space-y-2">
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            name="password"
+                                            placeholder="Password"
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
+                                    {/* Confirm Password */}
+                                    <div className="space-y-2">
+                                        <input
+                                            type="confirmPassword"
+                                            id="confirmPassword"
+                                            name="confirmPassword"
+                                            placeholder="Confirm Password"
+                                            className="input input-bordered w-full"
+                                            required
+                                        />
+                                    </div>
                                 
-                                <Link to="/">
-                                    <p className='font-montserrat font-light text-sm text-right pt-3 hover:underline'> Forgot Password? </p>
-                                </Link>
+                                <br />
 
                                 {/* Submit Button */}
                                 <div>
@@ -111,10 +171,11 @@ export default function Register() {
                                         type="submit"
                                         className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
                                     >
-                                        Login
+                                        Sign Up
                                     </button>
                                 </div>
                             </form>
+                            
                         </div>
                     </div>
                 </div>
@@ -123,3 +184,5 @@ export default function Register() {
         </div>
     );
 }
+
+export default PageTransition(Register);    
