@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import PageTransition from '../components/layout/PageTransition';
 import Logo from '../components/ui/Logo';
+import Door from '../components/ui/Door';
 import { countryCodes } from '../utils/CountryCode';
 
 const Register = () => {
@@ -42,24 +43,14 @@ const Register = () => {
 
     return (
         <div className='register'>  
-            <section className='max-h-full max-w-full grid sm:grid-cols-3'>
-            <div className="col-span-1 flex bg-red-500 max-sm:hidden"></div>
-                <div className='col-span-2 grid grid-rows-8'>
+            <section className='max-h-full max-w-full grid'>
+                
+
+                <div className='max-h-lvh grid grid-rows-8 md:mx-36 bg-white'>
 
                     {/* header */}
-                    <div className='row-span-1 flex justify-between items-center p-5 m-0 w-full'>   
-                        <Logo />
-
-                        <div className="flex items-center space-x-4">
-                            <span className="font-montserrat font-extralight text-xs">
-                                No Account yet?
-                            </span> 
-                            <Link to="/login">
-                                <button className="font-montserrat font-medium px-5 py-2 border border-black transition-all duration-300 hover:bg-black hover:text-white">
-                                    Login
-                                </button>
-                            </Link>
-                        </div>
+                    <div className='row-span-1 flex justify-center items-center p-5 m-0 w-full'>   
+                        <Logo width='160' height='60' />
                     </div>
 
                     {/* content */}
@@ -166,20 +157,26 @@ const Register = () => {
                                 <br />
 
                                 {/* Submit Button */}
-                                <div>
+                                <div className='flex justify-between'>
                                     <button
                                         type="submit"
                                         className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
                                     >
                                         Sign Up
                                     </button>
+
+                                    <Link className='flex flex-row space-x-2' to={'/Login'}> 
+                                        <p> Login </p>
+                                        <Door />
+                                    </Link>
+
                                 </div>
                             </form>
                             
                         </div>
                     </div>
                 </div>
-
+                <div className='fixed -z-10 bg-blue-500 h-full w-full'></div>
             </section>
         </div>
     );

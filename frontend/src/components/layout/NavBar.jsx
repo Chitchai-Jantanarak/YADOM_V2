@@ -7,8 +7,6 @@ import Arrow from '../ui/Arrow';
 
 const NavBar = () => {
 
-    
-
     // const toggleMenu = () => {
     //     setIsMenuOpen(prevState => !prevState);
     // };
@@ -36,9 +34,9 @@ const NavBar = () => {
                 <div className='flex items-center space-x-12'>
 
                     {/* Logo */}
-                    <div className='ml-5 max-md:m-4 transition-all duration-300'>
+                    <Link className='ml-5 max-md:m-4 transition-all duration-300' to={'/'} onClick={handleLinkClick}>
                         <Logo />
-                    </div>
+                    </Link>
                     
                     <nav className='hidden md:block'>
                         <ul className='flex relative space-x-4 tracking-widest '>

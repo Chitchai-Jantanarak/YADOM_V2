@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 
 import GradientBG from "../components/layout/GradientBG";
 import Logo from "../components/ui/Logo";
+import PageTransition from "../components/layout/PageTransition";
 
-export default function Starter() {
+const Starter = () => {
     return (
       <>
         <GradientBG />
@@ -29,3 +30,5 @@ export default function Starter() {
     </>
   );
 }
+
+export default PageTransition(Starter);

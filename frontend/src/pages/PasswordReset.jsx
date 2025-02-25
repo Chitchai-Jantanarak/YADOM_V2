@@ -34,8 +34,8 @@ const PasswordReset = () => {
 
     return (
         <div className='login'>  
-            <section className='max-h-full max-w-full grid sm:grid-cols-5'>
-                <div className='col-span-3 grid grid-rows-8'>
+            <section className='max-h-full max-w-full grid sm:grid-cols-7'>
+                <div className='col-span-5 grid grid-rows-8'>
 
                     {/* header */}
                     <div className='row-span-1 flex justify-between items-center p-5 m-0 w-full'>   

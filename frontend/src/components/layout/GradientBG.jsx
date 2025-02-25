@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Matrix4, Vector3 } from 'three';
+import { CubeCamera, Matrix4, Vector3 } from 'three';
 
 const StarField = ({ count = 1500, mousePosition }) => {
   const mesh = useRef();
