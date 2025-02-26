@@ -100,10 +100,18 @@ section {
   height: 100vh;
 }
 
-.App {
+/* .App {
   height: 100%;
   width: 100%;
-  /* padding: 0 40px; */
+  padding: 0 40px;
+} */
+
+.Debug {
+  position: sticky;
+  top: 0;
+  height: 400vh;
+  width: 100%;
+  z-index: -1;
 }
 /* --------- Utilities --------- */
 /* text-shadow */
@@ -189,3 +197,13 @@ section {
   background: #000;
   transform-origin: top;
 }
+
+.expereince-home-sticky-container {
+  height: 400vh;
+  position: relative;
+  z-index: -1;
+}
+.expereince-home-sticky-section {
+  height: 400vh;
+}
+

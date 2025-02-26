@@ -43,11 +43,17 @@ export default {
         'concert-one': ['Concert One', 'cursive'],
         'montserrat': ['montserrat', 'sans-serif'],
         'anybody': ['Anybody', 'cursive'],
+        'archivo': ['archivo', 'sans-serif'],
+        'zentokyozoo': ['zentokyozoo', 'sans-serif']
       },
     },
   },
   plugins: [
     require('daisyui'),
   ],
+
+  // daisyui: {
+  //   themes: ['sunset']
+  // }
 }
 

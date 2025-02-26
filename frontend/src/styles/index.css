@@ -154,3 +154,15 @@
   src: url('/src/assets/fonts/Anybody/static/Anybody-Regular.ttf') format('truetype');
   font-style: normal;
 }
+
+@font-face {
+  font-family: 'archivo';
+  src: url('/src/assets/fonts/Archivo/ArchivoBlack-Regular.ttf') format('truetype');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'zentokyozoo';
+  src: url('/src/assets/fonts/ZenTokyoZoo/ZenTokyoZoo-Regular.ttf') format('truetype');
+  font-style: normal;
+}

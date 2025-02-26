@@ -19,7 +19,7 @@ function App() {
       {/* Router and routes */}
         <AnimatePresence mode='wait'>
           <Routes location={location} key={location.pathname}>
-            <Route index element={<Home />} />
+            <Route path="/" element={<Home />} />
             <Route path="/Starter" element={<Starter />} />
             <Route path="/Login" element={<Login />} />
             <Route path="/Register" element={<Register />} />

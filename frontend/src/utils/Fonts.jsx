@@ -11,4 +11,6 @@ export const Fonts = {
     poppinsSemiBold: '/src/assets/fonts/Poppins/Poppins-SemiBold.ttf',
     poppinsThin: '/src/assets/fonts/Poppins/Poppins-Thin.ttf',
     anybody: '/src/assets/fonts/Anybody/static/Anybody-Regular.ttf',
+    archivo: '/src/assets/fonts/Archivo/ArchivoBlack-Regular.ttf',
+    zentokyozoo: '/src/assets/fonts/ZenTokyoZoo/ZenTokyoZoo-Regular.ttf'
 };
