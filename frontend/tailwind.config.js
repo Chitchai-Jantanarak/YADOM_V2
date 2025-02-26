@@ -52,8 +52,8 @@ export default {
     require('daisyui'),
   ],
 
-  // daisyui: {
-  //   themes: ['sunset']
-  // }
+  daisyui: {
+    themes: ['cmyk']
+  }
 }
 

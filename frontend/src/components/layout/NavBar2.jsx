@@ -34,8 +34,8 @@ const NavBar2 = () => {
     };
     
     return (
-        <div className="nav sticky top-0 z-40">
-            <div className="grid grid-cols-3 justify-between bg-white items-center outline-black/5">
+        <div className="nav sticky top-0 z-50">
+            <div className="grid grid-cols-3 py-4 justify-between bg-white items-center outline-black/5">
 
                 {/* Section - L */}
                 <div className='flex items-center space-x-12'>

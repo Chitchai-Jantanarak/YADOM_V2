@@ -42,38 +42,113 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
 
   const { width } = useWindowSize();
   const size = scale.xy.min() * 0.33;
+  const sizeInner = scale.xy.min() * 0.17;
+
+  const tl1 = useRef();
+  const tl2 = useRef();
+  const tl3 = useRef();
 
   // Transition effect with GSAP
   useEffect(() => {
-    if (!modelRef.current) return; 
+    if (!(modelRef.current && innerModelLRef.current && innerModelRRef.current)) return;
 
-    let ctx = gsap.context(() => {
-      let t1 = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".expereince-home-sticky-container",
-          start: "top top",
-          end: "bottom top",
-          scrub: 1
-        }
-      });
-
-      t1.fromTo(
-        modelRef.current.position,
-        { x: width * 0.2 },
-        { x: 0, duration: 1 }
-      )
-      .to(modelRef.current.rotation, {
-        y: Math.PI * 1.15,
-        duration: 1
-      }, "+=0.5")
-      .to(innerModelLRef.current.material, { opacity: 1 });
+    // First page animation - box moves from right to center
+    tl1.current = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".expereince-home-sticky-container .Debug:nth-child(1)",
+        start: "top top",
+        end: "bottom top",
+        scrub: 1
+      }
     });
-
-    return () => ctx.revert();  // Clean up
+    
+    tl1.current.fromTo(
+      modelRef.current.position,
+      { x: width * 0.2 }, // Using relative width positioning
+      { x: 0, ease: "power2.inOut" }
+    );
+    
+    // Second section animation - inner animation (model rotates)
+    tl2.current = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".expereince-home-sticky-container .Debug:nth-child(n+2):not(:last-child)",
+        start: "top top",
+        end: "bottom top",
+        scrub: 1
+      }
+    });
+    
+    tl2.current.to(
+      modelRef.current.rotation,
+      { y: Math.PI * 2, ease: "none" }
+    );
+    
+    // Third section animation - rectangles split horizontally
+    tl3.current = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".expereince-home-sticky-container .Debug:nth-last-child(-n)",
+        start: "top top",
+        end: "bottom top",
+        scrub: 1
+      }
+    });
+    
+    // Move left rectangle directly to the left
+    tl3.current.to(
+      innerModelLRef.current.position,
+      { x: -4, ease: "power2.out" },
+      0
+    );
+    
+    // Move right rectangle directly to the right
+    tl3.current.to(
+      innerModelRRef.current.position,
+      { x: 4, ease: "power2.out" },
+      0
+    );
+    
+    // Rotate the planes for visual interest
+    tl3.current.to(
+      innerModelLRef.current.rotation,
+      { z: Math.PI / 8, ease: "power2.out" }, // Slight rotation
+      0
+    );
+    
+    tl3.current.to(
+      innerModelRRef.current.rotation,
+      { z: -Math.PI / 8, ease: "power2.out" }, // Slight rotation in opposite direction
+      0
+    );
+    
+    // Fade in the models
+    tl3.current.to(
+      innerModelLRef.current.material,
+      { opacity: 1, ease: "power1.inOut" },
+      0
+    );
+    
+    tl3.current.to(
+      innerModelRRef.current.material,
+      { opacity: 1, ease: "power1.inOut" },
+      0
+    );
+    
+    return () => {
+      // Clean up timelines
+      if (tl1.current) tl1.current.kill();
+      if (tl2.current) tl2.current.kill();
+      if (tl3.current) tl3.current.kill();
+    };
   }, [width]);
 
-  const spring = useSpring({
+  const springMain = useSpring({
     scale: inViewport ? size : 0,
+    config: inViewport ? config.wobbly : config.stiff,
+    delay: inViewport ? 300 : 0
+  });
+
+  const springInner = useSpring({
+    scale: inViewport ? sizeInner : 0,
     config: inViewport ? config.wobbly : config.stiff,
     delay: inViewport ? 300 : 0
   });
@@ -81,27 +156,125 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
   return (
     <>
       <ambientLight intensity={Math.PI / 2} />
-      <Model ref={modelRef} args={[1, 1, 1, 0.05, 16]} {...spring}>
+      <Model ref={modelRef} args={[1, 1, 1, 0.05, 16]} {...springMain}>
         <meshStandardMaterial color="#1e88e5" />
       </Model>
-      <Model ref={innerModelLRef} args={[1, 1, 1, 0.05, 16]} {...spring}>
+      <Model ref={innerModelLRef} args={[1, 1, 1, 0.05, 16]} {...springInner}>
         <meshStandardMaterial color="#FFF" transparent opacity={0} />
       </Model>
-      <Model ref={innerModelRRef} args={[1, 1, 1, 0.05, 16]} {...spring}>
+      <Model ref={innerModelRRef} args={[1, 1, 1, 0.05, 16]} {...springInner}>
         <meshStandardMaterial color="#FFF" transparent opacity={0} />
       </Model>
     </>
   );
 };
 
-function StickySection() {
+const StickySection = () => {
   const el = useRef();
+  const [currentSection, setCurrentSection] = useState(0);
+  const [activeTimeline, setActiveTimeline] = useState("none");
+  
+  // Create refs for each section to track
+  const sectionRefs = useRef([]);
+  
+  // Create a container ref for the logger UI
+  const loggerRef = useRef();
+  
+  useEffect(() => {
+    // Set up observers for each section
+    const sections = document.querySelectorAll('.expereince-home-sticky-container .Debug');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = Array.from(sections).indexOf(entry.target);
+          setCurrentSection(index + 1);
+          
+          // Determine which timeline is active based on section
+          if (index === 0) {
+            setActiveTimeline("Timeline 1 - Box moves to center");
+          } else if (index >= 1 && index < sections.length - 1) {
+            setActiveTimeline("Timeline 2 - Model rotation");
+          } else if (index === sections.length - 1) {
+            setActiveTimeline("Timeline 3 - Split animation");
+          }
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    // Observe all sections
+    sections.forEach(section => {
+      observer.observe(section);
+      sectionRefs.current.push(section);
+    });
+    
+    // Create logger UI
+    const loggerElement = document.createElement('div');
+    loggerElement.className = 'scroll-logger';
+    loggerElement.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      z-index: 1000;
+      max-width: 300px;
+    `;
+    document.body.appendChild(loggerElement);
+    loggerRef.current = loggerElement;
+    
+    // Clean up
+    return () => {
+      sections.forEach(section => {
+        observer.unobserve(section);
+      });
+      if (loggerRef.current) {
+        document.body.removeChild(loggerRef.current);
+      }
+    };
+  }, []);
+  
+  // Update the logger UI whenever section or timeline changes
+  useEffect(() => {
+    if (loggerRef.current) {
+      loggerRef.current.innerHTML = `
+        <div><strong>Section:</strong> ${currentSection} of 7</div>
+        <div><strong>Timeline:</strong> ${activeTimeline}</div>
+        <div><strong>Scroll Progress:</strong> 
+          <div style="width: 100%; background: #444; height: 10px; margin-top: 5px; border-radius: 5px;">
+            <div style="width: ${(currentSection / 7) * 100}%; background: #1e88e5; height: 100%; border-radius: 5px;"></div>
+          </div>
+        </div>
+      `;
+    }
+  }, [currentSection, activeTimeline]);
   
   return (
     <section>
       <div className='expereince-home-sticky-container'>
-        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%' }}>
-          
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
+        </div>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
+        </div>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
+        </div>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
+        </div>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
+        </div>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
+        </div>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
         </div>
       </div>
       
@@ -114,7 +287,7 @@ function StickySection() {
       </UseCanvas>
     </section>
   );
-}
+};
 
 const AdvancedApp = () => {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -128,7 +301,7 @@ const AdvancedApp = () => {
 
   return (
     <>
-      <GlobalCanvas className='-z-10'></GlobalCanvas>
+      <GlobalCanvas className='z-10'></GlobalCanvas>
         <SmoothScrollbar>
           {(bind) => (
             <article {...bind}>
@@ -140,7 +313,7 @@ const AdvancedApp = () => {
               
               
               <StickySection />
-              <article className='absolute my-12 inline-block top-[10%]'>
+              <article className='absolute my-12 inline-block top-[10%] z-20'>
                 <header>
                   <h2 className="font-archivo text-[64px]">
                     REFRESH <span className="font-zentokyozoo text-[54px]">YOUR FEELING</span> <br />
@@ -170,221 +343,5 @@ const AdvancedApp = () => {
     </>
   );
 };
-
-
-// const AdvancedApp = () => {
-//   const [scrollY, setScrollY] = useState(0);
-//   const containerRef = useRef(null);
-  
-//   useEffect(() => {
-//     const lenis = new Lenis({
-//       duration: 1.2,
-//       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-//       direction: 'vertical',
-//       gestureDirection: 'vertical',
-//       smooth: true,
-//       mouseMultiplier: 1,
-//       smoothTouch: false,
-//       touchMultiplier: 2,
-//       infinite: false,
-//     });
-
-//     function raf(time) {
-//       lenis.raf(time);
-//       requestAnimationFrame(raf);
-//     }
-    
-//     // Capture scroll position for Three.js animations
-//     lenis.on('scroll', ({ scroll }) => {
-//       setScrollY(scroll);
-//     });
-
-//     requestAnimationFrame(raf);
-
-//     // Set up scroll sections with GSAP ScrollTrigger
-//     const sections = document.querySelectorAll('.scroll-section');
-//     sections.forEach((section, i) => {
-//       ScrollTrigger.create({
-//         trigger: section,
-//         start: 'top top',
-//         end: 'bottom top',
-//         onEnter: () => console.log(`Entered section ${i+1}`),
-//         onLeave: () => console.log(`Left section ${i+1}`),
-//       });
-//     });
-
-//     return () => {
-//       lenis.destroy();
-//       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-//     };
-//   }, []);
-
-//   return (
-//     <div ref={containerRef} style={{ position: 'relative' }}>
-//       {/* Canvas for 3D content */}
-//       <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
-//         <Canvas>
-//           <Scene scrollY={scrollY} />
-//           <color attach="background" args={['#000']} />
-//         </Canvas>
-//       </div>
-      
-//       {/* HTML Content with scroll sections */}
-//       <div className="content">
-//         <section className="scroll-section" style={{ height: '100vh', position: 'relative' }}>
-//           <h1 style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'white', fontSize: '2em' }}>
-//             Scroll to explore
-//           </h1>
-//         </section>
-        
-//         <section className="scroll-section" style={{ height: '100vh', position: 'relative' }}>
-//           <h1 style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'white', fontSize: '2em' }}>
-//             Watch the model rotate
-//           </h1>
-//         </section>
-        
-//         <section className="scroll-section" style={{ height: '100vh', position: 'relative' }}>
-//           <h1 style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'white', fontSize: '2em' }}>
-//             See the split effect
-//           </h1>
-//         </section>
-//       </div>
-//     </div>
-//   );
-// };
-
-// // 3D Scene Component
-// const Scene = ({ scrollY }) => {
-//   const { viewport } = useThree();
-  
-//   // References to 3D objects
-//   const modelRef = useRef(); // Single model reference for page 1-2
-//   const page3LeftRef = useRef();
-//   const page3RightRef = useRef();
-  
-//   // Animation timelines
-//   const tl1 = useRef();
-//   const tl2 = useRef();
-//   const tl3 = useRef();
-  
-//   // Set up GSAP animations on mount
-//   useEffect(() => {
-//     // First page animation - box moves from right to center
-//     // Adjusted to start further right (4 instead of 2.5)
-//     tl1.current = gsap.timeline({
-//       scrollTrigger: {
-//         trigger: ".scroll-section:nth-child(1)",
-//         start: "top top",
-//         end: "bottom top",
-//         scrub: 1
-//       }
-//     });
-    
-//     tl1.current.fromTo(
-//       modelRef.current.position,
-//       { x: 4 }, // Starting further right as requested
-//       { x: 0, ease: "power2.inOut" }
-//     );
-    
-//     // Second page animation - model rotates
-//     tl2.current = gsap.timeline({
-//       scrollTrigger: {
-//         trigger: ".scroll-section:nth-child(2)",
-//         start: "top top",
-//         end: "bottom top",
-//         scrub: 1
-//       }
-//     });
-    
-//     tl2.current.to(
-//       modelRef.current.rotation,
-//       { y: Math.PI * 2, ease: "none" }
-//     );
-    
-//     // Third page animation - rectangles split horizontally from the center model
-//     tl3.current = gsap.timeline({
-//       scrollTrigger: {
-//         trigger: ".scroll-section:nth-child(3)",
-//         start: "top top",
-//         end: "bottom top",
-//         scrub: 1
-//       }
-//     });
-    
-//     // Move left rectangle directly to the left (no y change)
-//     tl3.current.to(
-//       page3LeftRef.current.position,
-//       { x: -4, ease: "power2.out" },
-//       0
-//     );
-    
-//     // Move right rectangle directly to the right (no y change)
-//     tl3.current.to(
-//       page3RightRef.current.position,
-//       { x: 4, ease: "power2.out" },
-//       0
-//     );
-    
-//     // Rotate the planes for visual interest
-//     tl3.current.to(
-//       page3LeftRef.current.rotation,
-//       { z: Math.PI / 8, ease: "power2.out" }, // Slight rotation
-//       0
-//     );
-    
-//     tl3.current.to(
-//       page3RightRef.current.rotation,
-//       { z: -Math.PI / 8, ease: "power2.out" }, // Slight rotation in opposite direction
-//       0
-//     );
-    
-//     tl3.current.to(
-//       page3LeftRef.current.material,
-//       { opacity: 1, ease: "power1.inOut" },
-//       0
-//     );
-    
-//     tl3.current.to(
-//       page3RightRef.current.material,
-//       { opacity: 1, ease: "power1.inOut" },
-//       0
-//     );
-    
-//     return () => {
-//       // Clean up timelines
-//       if (tl1.current) tl1.current.kill();
-//       if (tl2.current) tl2.current.kill();
-//       if (tl3.current) tl3.current.kill();
-//     };
-//   }, []);
-  
-//   return (
-//     <>
-//       {/* Single model for both Page 1 and 2: Box that moves from right to center, then rotates */}
-//       <mesh ref={modelRef} position={[4, 0, 0]}>
-//         <boxGeometry args={[1, 1, 1]} />
-//         <meshStandardMaterial color="hotpink" />
-//       </mesh>
-      
-//       {/* Page 3: Rectangles that split horizontally from the center */}
-//       <mesh ref={page3LeftRef} position={[0, 0, -1]}>
-//         <planeGeometry args={[2, 3]} />
-//         <meshStandardMaterial color="cyan" transparent opacity={0} side={THREE.DoubleSide} />
-//       </mesh>
-      
-//       <mesh ref={page3RightRef} position={[0, 0, -1]}>
-//         <planeGeometry args={[2, 3]} />
-//         <meshStandardMaterial color="orange" transparent opacity={0} side={THREE.DoubleSide} />
-//       </mesh>
-      
-//       {/* Lighting */}
-//       <ambientLight intensity={0.5} />
-//       <pointLight position={[10, 10, 10]} intensity={1} />
-//     </>
-//   );
-// };
-
-// // Custom hook to easily access window size in Three.js
-
 
 export default AdvancedApp;

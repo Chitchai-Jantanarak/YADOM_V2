@@ -109,9 +109,9 @@ section {
 .Debug {
   position: sticky;
   top: 0;
-  height: 400vh;
+  height: 700vh;
   width: 100%;
-  z-index: -1;
+  z-index: 2;
 }
 /* --------- Utilities --------- */
 /* text-shadow */
@@ -199,11 +199,11 @@ section {
 }
 
 .expereince-home-sticky-container {
-  height: 400vh;
+  height: 700vh;
   position: relative;
-  z-index: -1;
+  z-index: 2;
 }
 .expereince-home-sticky-section {
-  height: 400vh;
+  height: 700vh;
 }
 
