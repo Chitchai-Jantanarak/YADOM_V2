@@ -66,7 +66,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
       { x: width * 0.2 },
       { x: 0, ease: "power2.inOut" }
     );
-    
+
     // tl2 init
     tl2.current = gsap.timeline({
       scrollTrigger: {
