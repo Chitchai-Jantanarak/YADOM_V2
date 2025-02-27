@@ -109,7 +109,6 @@ section {
 .Debug {
   position: sticky;
   top: 0;
-  height: 700vh;
   width: 100%;
   z-index: 2;
 }
@@ -199,11 +198,11 @@ section {
 }
 
 .expereince-home-sticky-container {
-  height: 700vh;
+  height: 800vh;
   position: relative;
   z-index: 2;
 }
 .expereince-home-sticky-section {
-  height: 700vh;
+  height: 800vh;
 }
 

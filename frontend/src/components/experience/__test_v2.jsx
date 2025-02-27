@@ -58,7 +58,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
         trigger: ".expereince-home-sticky-container .Debug:nth-child(1)",
         start: "top top",
         end: "bottom top",
-        scrub: 1
+        scrub: 1,
       }
     });
     
@@ -71,10 +71,11 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     // Second section animation - inner animation (model rotates)
     tl2.current = gsap.timeline({
       scrollTrigger: {
-        trigger: ".expereince-home-sticky-container .Debug:nth-child(n+2):not(:last-child)",
+        trigger: ".expereince-home-sticky-container .Debug:nth-child(2)",
         start: "top top",
         end: "bottom top",
-        scrub: 1
+        scrub: 1,
+        markers: 1
       }
     });
     
@@ -86,24 +87,25 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     // Third section animation - rectangles split horizontally
     tl3.current = gsap.timeline({
       scrollTrigger: {
-        trigger: ".expereince-home-sticky-container .Debug:nth-last-child(-n)",
+        trigger: ".expereince-home-sticky-container .Debug:nth-last-child(2)",
         start: "top top",
-        end: "bottom top",
-        scrub: 1
+        end: "top bottom",
+        scrub: 1,
+        markers: 1
       }
     });
     
     // Move left rectangle directly to the left
     tl3.current.to(
       innerModelLRef.current.position,
-      { x: -4, ease: "power2.out" },
+      { x: -sizeInner, ease: "power2.out" },
       0
     );
     
     // Move right rectangle directly to the right
     tl3.current.to(
       innerModelRRef.current.position,
-      { x: 4, ease: "power2.out" },
+      { x: sizeInner, ease: "power2.out" },
       0
     );
     
@@ -255,6 +257,9 @@ const StickySection = () => {
   return (
     <section>
       <div className='expereince-home-sticky-container'>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+          <p>test</p>
+        </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
           <p>test</p>
         </div>
