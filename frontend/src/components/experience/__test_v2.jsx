@@ -1,14 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useFrame, extend, useThree } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
 import { a, config, useSpring } from '@react-spring/three';
-import { GlobalCanvas, useCanvas, SmoothScrollbar, UseCanvas } from '@14islands/r3f-scroll-rig';
+import { GlobalCanvas, SmoothScrollbar, UseCanvas } from '@14islands/r3f-scroll-rig';
 import { StickyScrollScene } from '@14islands/r3f-scroll-rig/powerups';
 
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { AmbientLight } from 'three';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -52,7 +51,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
   useEffect(() => {
     if (!(modelRef.current && innerModelLRef.current && innerModelRRef.current)) return;
 
-    // First page animation - box moves from right to center
+    // tl1 init
     tl1.current = gsap.timeline({
       scrollTrigger: {
         trigger: ".expereince-home-sticky-container .Debug:nth-child(1)",
@@ -64,11 +63,11 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     
     tl1.current.fromTo(
       modelRef.current.position,
-      { x: width * 0.2 }, // Using relative width positioning
+      { x: width * 0.2 },
       { x: 0, ease: "power2.inOut" }
     );
     
-    // Second section animation - inner animation (model rotates)
+    // tl2 init
     tl2.current = gsap.timeline({
       scrollTrigger: {
         trigger: ".expereince-home-sticky-container .Debug:nth-child(2)",
@@ -84,7 +83,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
       { y: Math.PI * 2, ease: "none" }
     );
     
-    // Third section animation - rectangles split horizontally
+    // tl3 init
     tl3.current = gsap.timeline({
       scrollTrigger: {
         trigger: ".expereince-home-sticky-container .Debug:nth-last-child(2)",
@@ -95,34 +94,30 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
       }
     });
     
-    // Move left rectangle directly to the left
     tl3.current.to(
       innerModelLRef.current.position,
       { x: -sizeInner, ease: "power2.out" },
       0
     );
     
-    // Move right rectangle directly to the right
     tl3.current.to(
       innerModelRRef.current.position,
       { x: sizeInner, ease: "power2.out" },
       0
     );
     
-    // Rotate the planes for visual interest
     tl3.current.to(
       innerModelLRef.current.rotation,
-      { z: Math.PI / 8, ease: "power2.out" }, // Slight rotation
+      { z: Math.PI / 8, ease: "power2.out" },
       0
     );
     
     tl3.current.to(
       innerModelRRef.current.rotation,
-      { z: -Math.PI / 8, ease: "power2.out" }, // Slight rotation in opposite direction
+      { z: -Math.PI / 8, ease: "power2.out" }, 
       0
     );
     
-    // Fade in the models
     tl3.current.to(
       innerModelLRef.current.material,
       { opacity: 1, ease: "power1.inOut" },
@@ -173,86 +168,6 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
 
 const StickySection = () => {
   const el = useRef();
-  const [currentSection, setCurrentSection] = useState(0);
-  const [activeTimeline, setActiveTimeline] = useState("none");
-  
-  // Create refs for each section to track
-  const sectionRefs = useRef([]);
-  
-  // Create a container ref for the logger UI
-  const loggerRef = useRef();
-  
-  useEffect(() => {
-    // Set up observers for each section
-    const sections = document.querySelectorAll('.expereince-home-sticky-container .Debug');
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const index = Array.from(sections).indexOf(entry.target);
-          setCurrentSection(index + 1);
-          
-          // Determine which timeline is active based on section
-          if (index === 0) {
-            setActiveTimeline("Timeline 1 - Box moves to center");
-          } else if (index >= 1 && index < sections.length - 1) {
-            setActiveTimeline("Timeline 2 - Model rotation");
-          } else if (index === sections.length - 1) {
-            setActiveTimeline("Timeline 3 - Split animation");
-          }
-        }
-      });
-    }, { threshold: 0.5 });
-    
-    // Observe all sections
-    sections.forEach(section => {
-      observer.observe(section);
-      sectionRefs.current.push(section);
-    });
-    
-    // Create logger UI
-    const loggerElement = document.createElement('div');
-    loggerElement.className = 'scroll-logger';
-    loggerElement.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-      font-family: monospace;
-      z-index: 1000;
-      max-width: 300px;
-    `;
-    document.body.appendChild(loggerElement);
-    loggerRef.current = loggerElement;
-    
-    // Clean up
-    return () => {
-      sections.forEach(section => {
-        observer.unobserve(section);
-      });
-      if (loggerRef.current) {
-        document.body.removeChild(loggerRef.current);
-      }
-    };
-  }, []);
-  
-  // Update the logger UI whenever section or timeline changes
-  useEffect(() => {
-    if (loggerRef.current) {
-      loggerRef.current.innerHTML = `
-        <div><strong>Section:</strong> ${currentSection} of 7</div>
-        <div><strong>Timeline:</strong> ${activeTimeline}</div>
-        <div><strong>Scroll Progress:</strong> 
-          <div style="width: 100%; background: #444; height: 10px; margin-top: 5px; border-radius: 5px;">
-            <div style="width: ${(currentSection / 7) * 100}%; background: #1e88e5; height: 100%; border-radius: 5px;"></div>
-          </div>
-        </div>
-      `;
-    }
-  }, [currentSection, activeTimeline]);
   
   return (
     <section>
