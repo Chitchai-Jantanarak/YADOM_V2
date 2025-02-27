@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { RoundedBox } from '@react-three/drei';
+import { Environment, RoundedBox } from '@react-three/drei';
 import { a, config, useSpring } from '@react-spring/three';
 import { GlobalCanvas, SmoothScrollbar, UseCanvas } from '@14islands/r3f-scroll-rig';
 import { StickyScrollScene } from '@14islands/r3f-scroll-rig/powerups';
@@ -36,6 +37,7 @@ const Model = a(RoundedBox); // Add spring capability to RoundedBox
 
 const AnimatedModel = ({ scale, scrollState, inViewport }) => {
   const modelRef = useRef();
+  const materialRef = useRef();
   const innerModelLRef = useRef();
   const innerModelRRef = useRef();
 
@@ -43,100 +45,176 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
   const size = scale.xy.min() * 0.33;
   const sizeInner = scale.xy.min() * 0.17;
 
-  const tl1 = useRef();
-  const tl2 = useRef();
-  const tl3 = useRef();
+  // Timeline references
+  const tlTransition = useRef();
+  const tlRotation = useRef();
+  const tlColor3 = useRef();
+  const tlColor4 = useRef();
+  const tlColor5 = useRef();
+  const tlSplit = useRef();
+
+  // Create color refs to track current colors
+  const colorBlue = useRef(new THREE.Color("#1e88e5"));
+  const colorRed = useRef(new THREE.Color("#e53935"));
+  const colorGreen = useRef(new THREE.Color("#43a047"));
+  const colorPurple = useRef(new THREE.Color("#8e24aa"));
 
   // Transition effect with GSAP
   useEffect(() => {
-    if (!(modelRef.current && innerModelLRef.current && innerModelRRef.current)) return;
+    if (!(modelRef.current && materialRef.current && innerModelLRef.current && innerModelRRef.current)) return;
 
-    // tl1 init
-    tl1.current = gsap.timeline({
+    // Section 1: Transition to center
+    tlTransition.current = gsap.timeline({
       scrollTrigger: {
         trigger: ".expereince-home-sticky-container .Debug:nth-child(1)",
         start: "top top",
         end: "bottom top",
-        scrub: 1,
+        scrub: 1
       }
     });
     
-    tl1.current.fromTo(
+    tlTransition.current.fromTo(
       modelRef.current.position,
       { x: width * 0.2 },
       { x: 0, ease: "power2.inOut" }
     );
 
-    // tl2 init
-    tl2.current = gsap.timeline({
+    // Sections 2-5: Rotation (throughout these sections)
+    tlRotation.current = gsap.timeline({
       scrollTrigger: {
         trigger: ".expereince-home-sticky-container .Debug:nth-child(2)",
         start: "top top",
-        end: "bottom top",
-        scrub: 1,
-        markers: 1
+        end: ".expereince-home-sticky-container .Debug:nth-child(5) bottom top",
+        scrub: 1
       }
     });
     
-    tl2.current.to(
+    tlRotation.current.to(
       modelRef.current.rotation,
-      { y: Math.PI * 2, ease: "none" }
+      { y: Math.PI * 2, ease: "linear" }
     );
     
-    // tl3 init
-    tl3.current = gsap.timeline({
+    // For color animations, use a simple approach with onUpdate
+    
+    // Section 3: Change color to red
+    tlColor3.current = gsap.timeline({
       scrollTrigger: {
-        trigger: ".expereince-home-sticky-container .Debug:nth-last-child(2)",
+        trigger: ".expereince-home-sticky-container .Debug:nth-child(3)",
         start: "top top",
-        end: "top bottom",
-        scrub: 1,
-        markers: 1
+        end: "bottom top",
+        scrub: 1
       }
     });
     
-    tl3.current.to(
+    const initialColor3 = materialRef.current.color.clone();
+    tlColor3.current.to({}, {
+      duration: 1,
+      onUpdate: function() {
+        const progress = tlColor3.current.progress();
+        materialRef.current.color.r = initialColor3.r + (colorRed.current.r - initialColor3.r) * progress;
+        materialRef.current.color.g = initialColor3.g + (colorRed.current.g - initialColor3.g) * progress;
+        materialRef.current.color.b = initialColor3.b + (colorRed.current.b - initialColor3.b) * progress;
+      }
+    });
+    
+    // Section 4: Change color to green
+    tlColor4.current = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".expereince-home-sticky-container .Debug:nth-child(4)",
+        start: "top top",
+        end: "bottom top",
+        scrub: 1
+      }
+    });
+    
+    tlColor4.current.to({}, {
+      duration: 1,
+      onUpdate: function() {
+        const progress = tlColor4.current.progress();
+        materialRef.current.color.r = colorRed.current.r + (colorGreen.current.r - colorRed.current.r) * progress;
+        materialRef.current.color.g = colorRed.current.g + (colorGreen.current.g - colorRed.current.g) * progress;
+        materialRef.current.color.b = colorRed.current.b + (colorGreen.current.b - colorRed.current.b) * progress;
+      }
+    });
+    
+    // Section 5: Change color to purple
+    tlColor5.current = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".expereince-home-sticky-container .Debug:nth-child(5)",
+        start: "top top",
+        end: "bottom top",
+        scrub: 1
+      }
+    });
+    
+    tlColor5.current.to({}, {
+      duration: 1,
+      onUpdate: function() {
+        const progress = tlColor5.current.progress();
+        materialRef.current.color.r = colorGreen.current.r + (colorPurple.current.r - colorGreen.current.r) * progress;
+        materialRef.current.color.g = colorGreen.current.g + (colorPurple.current.g - colorGreen.current.g) * progress;
+        materialRef.current.color.b = colorGreen.current.b + (colorPurple.current.b - colorGreen.current.b) * progress;
+      }
+    });
+    
+    // Section 6: Split and set opacity of sub-models
+    tlSplit.current = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".expereince-home-sticky-container .Debug:nth-child(6)",
+        start: "top top",
+        end: "bottom top",
+        scrub: 1
+      }
+    });
+    
+    // Move and rotate left inner model
+    tlSplit.current.to(
       innerModelLRef.current.position,
       { x: -sizeInner, ease: "power2.out" },
       0
     );
     
-    tl3.current.to(
-      innerModelRRef.current.position,
-      { x: sizeInner, ease: "power2.out" },
-      0
-    );
-    
-    tl3.current.to(
+    tlSplit.current.to(
       innerModelLRef.current.rotation,
       { z: Math.PI / 8, ease: "power2.out" },
       0
     );
     
-    tl3.current.to(
-      innerModelRRef.current.rotation,
-      { z: -Math.PI / 8, ease: "power2.out" }, 
-      0
-    );
-    
-    tl3.current.to(
+    tlSplit.current.to(
       innerModelLRef.current.material,
       { opacity: 1, ease: "power1.inOut" },
       0
     );
     
-    tl3.current.to(
+    // Move and rotate right inner model
+    tlSplit.current.to(
+      innerModelRRef.current.position,
+      { x: sizeInner, ease: "power2.out" },
+      0
+    );
+    
+    tlSplit.current.to(
+      innerModelRRef.current.rotation,
+      { z: -Math.PI / 8, ease: "power2.out" }, 
+      0
+    );
+    
+    tlSplit.current.to(
       innerModelRRef.current.material,
       { opacity: 1, ease: "power1.inOut" },
       0
     );
     
     return () => {
-      // Clean up timelines
-      if (tl1.current) tl1.current.kill();
-      if (tl2.current) tl2.current.kill();
-      if (tl3.current) tl3.current.kill();
+      // Clean up all timelines
+      if (tlTransition.current) tlTransition.current.kill();
+      if (tlRotation.current) tlRotation.current.kill();
+      if (tlColor3.current) tlColor3.current.kill();
+      if (tlColor4.current) tlColor4.current.kill();
+      if (tlColor5.current) tlColor5.current.kill();
+      if (tlSplit.current) tlSplit.current.kill();
     };
-  }, [width]);
+  }, [width, sizeInner]);
 
   const springMain = useSpring({
     scale: inViewport ? size : 0,
@@ -154,7 +232,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     <>
       <ambientLight intensity={Math.PI / 2} />
       <Model ref={modelRef} args={[1, 1, 1, 0.05, 16]} {...springMain}>
-        <meshStandardMaterial color="#1e88e5" />
+        <meshStandardMaterial ref={materialRef} color={colorBlue.current} />
       </Model>
       <Model ref={innerModelLRef} args={[1, 1, 1, 0.05, 16]} {...springInner}>
         <meshStandardMaterial color="#FFF" transparent opacity={0} />
@@ -173,28 +251,25 @@ const StickySection = () => {
     <section>
       <div className='expereince-home-sticky-container'>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
+          <p>Section 1: Move to center</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
+          <p>Section 2: Rotation</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
+          <p>Section 3: Red + Rotation</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
+          <p>Section 4: Green + Rotation</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
+          <p>Section 5: Purple + Rotation</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
+          <p>Section 6: Split models</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
-        </div>
-        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
-          <p>test</p>
+          <p>Section 7: Unpin</p>
         </div>
       </div>
       
@@ -233,7 +308,7 @@ const AdvancedApp = () => {
               
               
               <StickySection />
-              <article className='absolute my-12 inline-block top-[10%] z-20'>
+              <article className='absolute my-12 inline-block top-[12.5%] z-20'>
                 <header>
                   <h2 className="font-archivo text-[64px]">
                     REFRESH <span className="font-zentokyozoo text-[54px]">YOUR FEELING</span> <br />
