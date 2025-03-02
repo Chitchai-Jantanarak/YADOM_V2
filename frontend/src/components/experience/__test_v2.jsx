@@ -250,13 +250,13 @@ const StickySection = () => {
   return (
     <section>
       <div className='expereince-home-sticky-container'>
-        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+        <div ref={el} className='Debug' style={{ height: '70vh', width: '100%', zIndex: '1' }}>
           <p>Section 1: Move to center</p>
         </div>
-        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+        <div ref={el} className='Debug' style={{ height: '70vh', width: '100%', zIndex: '1' }}>
           <p>Section 2: Rotation</p>
         </div>
-        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
+        <div ref={el} className='Debug' style={{ height: '70vh', width: '100%', zIndex: '1' }}>
           <p>Section 3: Red + Rotation</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
