@@ -1,32 +1,32 @@
 import React from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
 
+import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
-import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import 'swiper/css/scrollbar';
 
 const CarouselImage = ({ images }) => {
   return (
-    <div className="carousel-container">
+    <div className="w-full h-full relative">
       <Swiper
-        spaceBetween={50}
+        spaceBetween={0}
         slidesPerView={1}
         loop={true}
         autoplay={{ delay: 3000, disableOnInteraction: false }}
-        pagination={{ clickable: true }}
+        pagination={{ 
+          clickable: true,
+          bulletClass: 'swiper-pagination-bullet custom-bullet',
+          bulletActiveClass: 'swiper-pagination-bullet-active custom-bullet-active'
+        }}
         modules={[Autoplay, Pagination]}
-        className='mySwiper'
+        className="w-full h-full"
       >
         {images.map((image, index) => (
-          <SwiperSlide key={index}>
-            <img src={image.src} alt={image.alt} className='w-full object-contain' />
+          <SwiperSlide key={index} className="w-full h-full flex justify-center items-center">
+            <img src={image.src} alt={image.alt} className="w-full h-full object-cover" />
           </SwiperSlide>
         ))}
       </Swiper>
-
-      {/* Optional: You can add other custom styles or features here */}
     </div>
   );
 };

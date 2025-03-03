@@ -42,7 +42,7 @@
 }
 
 /* Reset Tailwind Scrollbar */
-/* * {
+* {
   scrollbar-width: auto !important;
   scrollbar-color: initial !important;
   font-size: var(--font-size-base);
@@ -59,11 +59,11 @@
 
 *::-webkit-scrollbar-track {
   background: initial !important;
-} */
+}
 /* ----------------------------- */
 
 /* custom scrollbar size as default */
-/* ::-webkit-scrollbar {
+::-webkit-scrollbar {
   height: 10px !important;
   width: 10px !important;
 }
@@ -72,19 +72,12 @@
   ::-webkit-scrollbar-thumb {
     background-color: transparent;
     border-radius: 4px;
-    border: 2px solid var(--formal-text-color);
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--background-color) !important;
-    border: 3px solid var(--link-color) !important; 
-    transition: background-color 0.2s ease-in, border-color 0.2s ease-in;
   }
 
   body::-webkit-scrollbar-thumb {
     background-color: var(--formal-text-color) !important;
   }
-} */
+}
 /* ----------------------------- */
 
 p, span, br, h1, h2, h3, h4, h5, h6, strong, em, a {
@@ -154,8 +147,10 @@ section {
 .util-textshadow-black:hover {
   text-shadow: 1px 1px 12px rgba(0, 0, 0, 0.7);
 }
+/* --------- Utilities --------- */
 
-
+/* --------- Layouts & UI --------- */
+/* text carousel */
 .ui-textcarousel-parallax {
   overflow: hidden;
   letter-spacing: 2px;
@@ -168,7 +163,6 @@ section {
   /* border-top: solid var(--formal-text-color) 4px;
   border-bottom: solid var(--formal-text-color) 4px; */
 }
-
 .ui-textcarousel-scroller {
   padding: var(--spacing-medium) 0;
   font-size: var(--font-size-subheading);
@@ -179,13 +173,13 @@ section {
   display: flex;
   flex-wrap: nowrap;
 }
-
 .ui-textcarousel-scroller span {
   display: block;
   font-size: 32px;
   margin-right: 20px;
 }
 
+/* page transition */
 .layout-transition-slide-in {
   position: fixed;
   top: 0;
@@ -204,6 +198,33 @@ section {
   background: #000;
   transform-origin: top;
 }
+
+/* swiper images */
+.swiper-pagination {
+  position: absolute !important;
+  top: 20px !important;
+  bottom: auto !important;
+  left: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+.custom-bullet {
+  width: 12px !important;
+  height: 12px !important;
+  margin: 0 12px !important;
+  background-color: #FFFFFF !important;
+  opacity: 1 !important;
+  border-radius: 50% !important;
+  transition: all 0.3s ease !important;
+}
+.custom-bullet-active {
+  background-color: #B0BAED !important;
+  width: 20px !important;
+  border-radius: 5px !important;
+}
+/* --------- Layouts & UI --------- */
 
 .expereince-home-sticky-container {
   height: 800vh;

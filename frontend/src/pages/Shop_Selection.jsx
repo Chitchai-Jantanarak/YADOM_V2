@@ -3,6 +3,7 @@ import Lenis from 'lenis';
 
 import PageTransition from '../components/layout/PageTransition';
 import CarouselImage from '../components/ui/CarouselImage';
+import CarouselCard from '../components/ui/CarouselCard';
 import NavBar2 from '../components/layout/NavBar2';
 import TextCarousel from '../components/ui/TextCarousel';
 import Footer from '../components/layout/Footer';
@@ -41,36 +42,37 @@ const Shop_Selection = () => {
     }, []);
 
     return (
-        <div className='shopselection'>
-            <div className='mx-[5%]'>
+        <div className='shopselection mx-[5%]'>
+            <div>
                 <NavBar2 />
             </div>
-            <header className='max-h-[70vh] relative block justify-center overflow-hidden items-center mx-14 border-2 border-black'>
+            <header className="max-h-[70vh] h-[70vh] relative flex justify-center items-center my-[5%] overflow-hidden">
                 <CarouselImage images={images} />
             </header>
 
-
-
-            <div className='mx-[5%]'>
+            <div>
                 <header className='font-archivo font-black text-3xl'> SPOTLIGHT </header>
-                <section className='h-80 flex bg-gray-100'>
-                    <div className="container mx-auto py-10 px-24 grid sm:grid-cols-2">
-                            <div>
-                                <h2 className="text-xl mb-4">Topic 1</h2>
-                                <p>Content for Topic 1...</p>
-                            </div>
-                            <div className=''>
-                                test
-                            </div>
-                    </div>
-                </section>
 
-                <section className='h-80 bg-gray-200'>
-                    <div className="container mx-auto p-24">
-                        <h2 className="text-xl mb-4">Topic 2</h2>
-                        <p>Content for Topic 2...</p>
-                    </div>
+
+                <section className='h-80 flex items-center justify-center bg-gray-100'>
+                    <article className="overflow-hidden">
+                        <CarouselCard images={images} />
+                    </article>
                 </section>
+                <section className="h-80 bg-gray-200">
+    <div className="container mx-auto px-12 py-24 flex justify-around items-center w-full">
+        <div>
+            <p>test</p>
+        </div>
+        <div>
+            <p>tester</p>
+        </div>
+        <div>
+            <p>testtest</p>    
+        </div>
+    </div>
+</section>
+
 
                 <section className='h-80 bg-gray-300'>
                     <div className="container mx-auto p-24">

@@ -25,7 +25,7 @@ export default function Footer ({ carousel = false }) {
                     </div>
                 ))}
                 
-                <footer className="footer bg-base-200 text-base-content p-10">
+                <footer className="footer text-base-content p-10">
 
 
                     <nav>
@@ -51,7 +51,7 @@ export default function Footer ({ carousel = false }) {
                         <a className="link link-hover">Account Details</a>
                     </nav>
                     </footer>
-                <footer className="footer bg-base-200 text-base-content border-base-300 border-t px-10 py-6">
+                <footer className="footer text-base-content border-base-300 border-t px-10 py-6">
                     <aside className="grid-flow-row items-center">
                         <Logo />
                         <p>
