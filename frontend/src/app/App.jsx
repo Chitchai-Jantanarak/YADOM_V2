@@ -8,6 +8,7 @@ import Starter from '../pages/Starter.jsx';
 import Register from '../pages/Register.jsx'
 import PasswordForgot from '../pages/PasswordForgot.jsx';
 import PasswordReset from '../pages/PasswordReset.jsx';
+import Shop_Selection from '../pages/Shop_Selection.jsx';
 
 import '../styles/App.css';
 
@@ -19,7 +20,9 @@ function App() {
       {/* Router and routes */}
         <AnimatePresence mode='wait'>
           <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Home />} />
+            {/* !TODO : REMARK THE TEST PAGE */}
+            <Route path="/" element={<Shop_Selection />} /> 
+
             <Route path="/Starter" element={<Starter />} />
             <Route path="/Login" element={<Login />} />
             <Route path="/Register" element={<Register />} />

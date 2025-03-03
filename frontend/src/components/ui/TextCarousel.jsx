@@ -16,9 +16,10 @@ import {
  * @param {Array<string>} props.text - The array of text items to scroll.
  * @param {Array<number} props.colorIndex - The color index for the text.
  * @param {number} [props.baseVelocity=5] - The base velocity for scrolling.
+ * @param {string} props.text - Font className
  * @returns {JSX.Element}
  */
-const TextCarousel = ({ text = ["INSERT TEXT"], baseVelocity = 5, colorIndex = [1] }) => {
+const TextCarousel = ({ text = ["INSERT TEXT"], baseVelocity = 5, colorIndex = [1], font = "font-zentokyozoo" }) => {
   const baseX = useMotionValue(0);
   const { scrollY } = useScroll();
   const scrollVelocity = useVelocity(scrollY);
@@ -71,7 +72,9 @@ const TextCarousel = ({ text = ["INSERT TEXT"], baseVelocity = 5, colorIndex = [
           text.map((item, j) => (
             <span
               key={`${i}-${j}`}
-              className={getColorClass(colorIndex[j % colorIndex.length])}
+              className={`${
+                getColorClass(colorIndex[j % colorIndex.length])
+              } ${font}`}
             >
               {item}
               {" - "}

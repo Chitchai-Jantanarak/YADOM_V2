@@ -45,8 +45,14 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
   const size = scale.xy.min() * 0.33;
   const sizeInner = scale.xy.min() * 0.17;
 
-  // Timeline references
-  const tlTransition = useRef();
+  // Timeline references ** Split as section to implemented 1:1
+  const tl = useRef();
+  const t2 = useRef();
+  const t3 = useRef();
+  const t4 = useRef();
+  const t5 = useRef();
+  const t6 = useRef();
+  const t7 = useRef();
   const tlRotation = useRef();
   const tlColor3 = useRef();
   const tlColor4 = useRef();
@@ -64,34 +70,37 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     if (!(modelRef.current && materialRef.current && innerModelLRef.current && innerModelRRef.current)) return;
 
     // Section 1: Transition to center
-    tlTransition.current = gsap.timeline({
+    tl.current = gsap.timeline({
       scrollTrigger: {
         trigger: ".expereince-home-sticky-container .Debug:nth-child(1)",
         start: "top top",
         end: "bottom top",
-        scrub: 1
+        scrub: 1,
       }
     });
     
-    tlTransition.current.fromTo(
+    tl.current.fromTo(
       modelRef.current.position,
       { x: width * 0.2 },
       { x: 0, ease: "power2.inOut" }
     );
+
+    (t2.current, t3.current, t4.current)
 
     // Sections 2-5: Rotation (throughout these sections)
     tlRotation.current = gsap.timeline({
       scrollTrigger: {
         trigger: ".expereince-home-sticky-container .Debug:nth-child(2)",
         start: "top top",
-        end: ".expereince-home-sticky-container .Debug:nth-child(5) bottom top",
-        scrub: 1
+        end: "bottom top",
+        scrub: 1,
+        markers: 1
       }
     });
     
     tlRotation.current.to(
       modelRef.current.rotation,
-      { y: Math.PI * 2, ease: "linear" }
+      { y: Math.PI * 2 * 4, ease: "linear" }
     );
     
     // For color animations, use a simple approach with onUpdate
@@ -207,7 +216,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     
     return () => {
       // Clean up all timelines
-      if (tlTransition.current) tlTransition.current.kill();
+      if (tl.current) tl.current.kill();
       if (tlRotation.current) tlRotation.current.kill();
       if (tlColor3.current) tlColor3.current.kill();
       if (tlColor4.current) tlColor4.current.kill();
@@ -250,13 +259,13 @@ const StickySection = () => {
   return (
     <section>
       <div className='expereince-home-sticky-container'>
-        <div ref={el} className='Debug' style={{ height: '70vh', width: '100%', zIndex: '1' }}>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
           <p>Section 1: Move to center</p>
         </div>
-        <div ref={el} className='Debug' style={{ height: '70vh', width: '100%', zIndex: '1' }}>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
           <p>Section 2: Rotation</p>
         </div>
-        <div ref={el} className='Debug' style={{ height: '70vh', width: '100%', zIndex: '1' }}>
+        <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>
           <p>Section 3: Red + Rotation</p>
         </div>
         <div ref={el} className='Debug' style={{ height: '100vh', width: '100%', zIndex: '1' }}>

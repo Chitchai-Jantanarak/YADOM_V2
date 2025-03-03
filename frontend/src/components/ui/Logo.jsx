@@ -13,7 +13,7 @@ export default function Logo(
   }) {
   
   return (
-    <Link to="/">
+      <div>
         <svg 
           x={`${x}`} 
           y={`${y}`} 
@@ -33,7 +33,7 @@ export default function Logo(
             <line x1="21" y1="15" x2="21" stroke={`${color}`} strokeWidth="8"/>
             <line x1="47" y1="15" x2="47" stroke={`${color}`} strokeWidth="8"/>
           </g>
-      </svg>
-    </Link>
+        </svg>
+      </div>
   )
 }

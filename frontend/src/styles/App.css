@@ -42,7 +42,7 @@
 }
 
 /* Reset Tailwind Scrollbar */
-* {
+/* * {
   scrollbar-width: auto !important;
   scrollbar-color: initial !important;
   font-size: var(--font-size-base);
@@ -59,11 +59,11 @@
 
 *::-webkit-scrollbar-track {
   background: initial !important;
-}
+} */
 /* ----------------------------- */
 
 /* custom scrollbar size as default */
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   height: 10px !important;
   width: 10px !important;
 }
@@ -84,7 +84,7 @@
   body::-webkit-scrollbar-thumb {
     background-color: var(--formal-text-color) !important;
   }
-}
+} */
 /* ----------------------------- */
 
 p, span, br, h1, h2, h3, h4, h5, h6, strong, em, a {
@@ -170,7 +170,6 @@ section {
 }
 
 .ui-textcarousel-scroller {
-  font-weight: 600;
   padding: var(--spacing-medium) 0;
   font-size: var(--font-size-subheading);
   display: flex;
@@ -215,3 +214,10 @@ section {
   height: 800vh;
 }
 
+
+
+@media (min-width: 768px) {
+  .md-clip-path {
+    clip-path: polygon(0% 0, 100% 0%, 100% 100%, 0 100%);
+  }
+}

@@ -1,14 +1,30 @@
 import Logo from "../ui/Logo";
+import TextCarousel from "../ui/TextCarousel";
 
-export default function Footer() {
+export default function Footer ({ carousel = false }) {
     return (
         <>
-        <div className="relative h-[700px] md:h-[500px]" style={{clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)"}}>
-            <div className="fixed bottom-0 w-full z-30 font-anybody">
-            
-                <div className="flex justify-center">
-                    <h1 className="hidden md:flex"> Let's Yadomm becomes your best bud !</h1>
-                </div>
+        <div className="md:relative md:h-[500px] md-clip-path">
+            <div className="md:fixed bottom-0 w-full z-30 font-anybody">
+
+                {(carousel && (
+                    <div className="block justify-center">
+                        <TextCarousel 
+                            text={['BE REFRESHED WITH YADOMM', 'BE COOL WITH YOUR STYLE']}
+                            colorIndex={[4]}
+                            baseVelocity={5} 
+                            className="font-poppins"
+                        />
+
+                        <TextCarousel 
+                            text={['BE REFRESHED WITH YADOMM', 'BE COOL WITH YOUR STYLE']}
+                            colorIndex={[4]}
+                            baseVelocity={-5} 
+                            className="font-poppins"
+                        />
+                    </div>
+                ))}
+                
                 <footer className="footer bg-base-200 text-base-content p-10">
 
 
