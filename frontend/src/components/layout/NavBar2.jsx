@@ -65,7 +65,7 @@ const NavBar2 = () => {
 
                 {/* Section - M */}
                     {/* Logo */}
-                    <Link className='flex self-center justify-center transition-all duration-300' to={'/'} onClick={handleLinkClick}>
+                    <Link className='flex h-full w-full items-center justify-center transition-all duration-300' to={'/'} onClick={handleLinkClick}>
                         <Logo />
                     </Link>
                 

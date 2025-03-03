@@ -301,14 +301,14 @@ const AdvancedApp = () => {
           {(bind) => (
             <article {...bind}>
               {isTouchDevice && (
-                  <p className='fixed t-6 left-6 z-5 p-4 rounded text-white' style={{background: 'rgba(255, 0, 0, 0.7)'}}>
+                  <p className='sticky t-6 left-6 z-5 p-4 rounded text-white' style={{background: 'rgba(255, 0, 0, 0.7)'}}>
                     WARNING: Touch device detected, performance may vary
                   </p>
               )}
               
               
               <StickySection />
-              <article className='absolute my-12 inline-block top-[12.5%] z-20'>
+              <article className='absolute my-12 inline-block top-[20%] z-20'>
                 <header>
                   <h2 className="font-archivo text-[64px]">
                     REFRESH <span className="font-zentokyozoo text-[54px]">YOUR FEELING</span> <br />
