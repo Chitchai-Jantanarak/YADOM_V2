@@ -1,26 +1,31 @@
-export default function Arrow () {
-    return (
-        <svg 
-            className="transition-transform duration-300 transform rotate-0 group-hover:rotate-180" 
-            width="12" 
-            height="12" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <g clipPath="url(#clip0_1665_1410)">
-                <path 
-                    fillRule="evenodd" 
-                    clipRule="evenodd" 
-                    d="M12.7069 15.7071C12.5193 15.8946 12.265 15.9999 11.9999 15.9999C11.7347 15.9999 11.4804 15.8946 11.2929 15.7071L5.63585 10.0501C5.54034 9.95785 5.46416 9.84751 5.41175 9.7255C5.35934 9.6035 5.33176 9.47228 5.3306 9.3395C5.32945 9.20672 5.35475 9.07504 5.40503 8.95215C5.45531 8.82925 5.52957 8.7176 5.62346 8.6237C5.71735 8.52981 5.829 8.45556 5.9519 8.40528C6.0748 8.355 6.20648 8.32969 6.33926 8.33085C6.47204 8.332 6.60325 8.35959 6.72526 8.412C6.84726 8.46441 6.95761 8.54059 7.04985 8.6361L11.9999 13.5861L16.9499 8.6361C17.1385 8.45394 17.3911 8.35315 17.6533 8.35542C17.9155 8.3577 18.1663 8.46287 18.3517 8.64828C18.5371 8.83369 18.6423 9.0845 18.6445 9.3467C18.6468 9.60889 18.546 9.8615 18.3639 10.0501L12.7069 15.7071Z" 
-                    fill="black"
-                />
-            </g>
-            <defs>
-                <clipPath id="clip0_1665_1410">
-                    <rect width="24" height="24" fill="white"/>
-                </clipPath>
-            </defs>
-        </svg>
-    );
-}
+import React from 'react';
+import { motion } from 'framer-motion';
+
+export default function Arrow  ({ 
+  size = 24, 
+  color = "currentColor", 
+  strokeWidth = 2,
+  rotationDeg = 0,
+  hoverRotationDeg = -315,
+  duration = 0.3
+}) {
+  return (
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      initial={{ rotate: rotationDeg }}
+      animate={{ rotate: rotationDeg }}
+      whileHover={{ rotate: hoverRotationDeg }}
+      transition={{ duration, type: "spring", stiffness: 200 }}
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </motion.svg>
+  );
+};

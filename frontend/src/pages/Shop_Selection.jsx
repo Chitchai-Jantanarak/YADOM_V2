@@ -1,91 +1,124 @@
-import React, { useEffect } from 'react';
-import Lenis from 'lenis';
+import { useEffect } from "react"
+import Lenis from "lenis"
 
-import PageTransition from '../components/layout/PageTransition';
-import CarouselImage from '../components/ui/CarouselImage';
-import CarouselCard from '../components/ui/CarouselCard';
-import NavBar2 from '../components/layout/NavBar2';
-import TextCarousel from '../components/ui/TextCarousel';
-import Footer from '../components/layout/Footer';
+import PageTransition from "../components/layout/PageTransition"
+import CarouselImage from "../components/ui/CarouselImage"
+import CarouselCard from "../components/ui/CarouselCard"
+import ProductSection from "../components/ui/ProductSection"
+import NavBar2 from "../components/layout/NavBar2"
+import Footer from "../components/layout/Footer"
 
 const Shop_Selection = () => {
+  // Hero carousel images
+  const heroImages = [
+    { src: "https://placehold.co/600x400/ff9a9e/fff?text=Pastel+Pink", alt: "Pink Inhaler" },
+    { src: "https://placehold.co/600x400/98fb98/fff?text=Pastel+Green", alt: "Green Inhaler" },
+    { src: "https://placehold.co/600x400/add8e6/fff?text=Pastel+Blue", alt: "Blue Inhaler" },
+    { src: "https://placehold.co/600x400/ffb347/fff?text=Pastel+Orange", alt: "Orange Inhaler" },
+  ]
 
-    const images = [{ src: 'https://placehold.co/600x400', alt: 'Image 1' },
-    { src: 'https://placehold.co/400x400', alt: 'Image 2' },
-    { src: 'https://placehold.co/200x200', alt: 'Image 3' },
-    { src: 'https://placehold.co/800x800', alt: 'Image 4' },];
+  // Spotlight product images
+  const spotlightImages = [
+    {
+      src: "https://placehold.co/200x200/e0ffff/fff?text=Product+1",
+      alt: "Product 1",
+      title: "ICY CHAIN",
+      price: "12.99",
+    },
+    {
+      src: "https://placehold.co/200x200/ffff99/fff?text=Product+2",
+      alt: "Product 2",
+      title: "FUN CHAIN",
+      price: "14.99",
+    },
+    {
+      src: "https://placehold.co/200x200/f5f5dc/fff?text=Product+3",
+      alt: "Product 3",
+      title: "BEIGE CHAIN",
+      price: "11.99",
+    },
+    {
+      src: "https://placehold.co/200x200/e6e6fa/fff?text=Product+4",
+      alt: "Product 4",
+      title: "LILAC CHAIN",
+      price: "13.99",
+    },
+    {
+      src: "https://placehold.co/200x200/e0ffff/fff?text=Product+5",
+      alt: "Product 5",
+      title: "ICY CHAIN",
+      price: "12.99",
+    },
+  ]
 
-    // Initialize Lenis
-    useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            direction: 'vertical',
-            gestureDirection: 'vertical',
-            smooth: true,
-            mouseMultiplier: 1,
-            smoothTouch: false,
-            touchMultiplier: 2,
-            infinite: false,
-        });
+  // Initialize Lenis
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      direction: "vertical",
+      gestureDirection: "vertical",
+      smooth: true,
+      mouseMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+      infinite: false,
+    })
 
-        function raf(time) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-        
-        requestAnimationFrame(raf);
+    function raf(time) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
 
-        return () => {
-            lenis.destroy();
-        };
-    }, []);
+    requestAnimationFrame(raf)
 
-    return (
-        <div className='shopselection mx-[5%]'>
-            <div>
-                <NavBar2 />
-            </div>
-            <header className="max-h-[70vh] h-[70vh] relative flex justify-center items-center my-[5%] overflow-hidden">
-                <CarouselImage images={images} />
-            </header>
+    return () => {
+      lenis.destroy()
+    }
+  }, [])
 
-            <div>
-                <header className='font-archivo font-black text-3xl'> SPOTLIGHT </header>
+  return (
+    <div className="shopselection mx-[5%]">
+      <div>
+        <NavBar2 />
+      </div>
 
+      {/* Hero Carousel */}
+      <header className="max-h-[70vh] h-[70vh] relative flex justify-center items-center my-[5%] overflow-hidden">
+        <CarouselImage images={heroImages} />
+      </header>
 
-                <section className='h-80 flex items-center justify-center bg-gray-100'>
-                    <article className="overflow-hidden">
-                        <CarouselCard images={images} />
-                    </article>
-                </section>
-                <section className="h-80 bg-gray-200">
-    <div className="container mx-auto px-12 py-24 flex justify-around items-center w-full">
+      <div className="max-w-6xl mx-auto">
+        {/* Spotlight Section */}
         <div>
-            <p>test</p>
+            <header className="font-archivo font-black text-3xl mb-4"> SPOTLIGHT </header>
+            <CarouselCard images={spotlightImages} />
         </div>
-        <div>
-            <p>tester</p>
-        </div>
-        <div>
-            <p>testtest</p>    
-        </div>
+
+        {/* Product Categories */}
+        <ProductSection
+          title="INHALERS"
+          subtitle="FOR YOUR LUNGS"
+          image={{
+            src: "https://placehold.co/400x400/98fb98/fff?text=Pastel+Green",
+            alt: "Green Inhaler",
+          }}
+        />
+
+        <ProductSection
+          title="ACCESSORIES"
+          subtitle="FOR YOU"
+          image={{
+            src: "https://placehold.co/400x400/ffcccb/fff?text=Accessories",
+            alt: "Accessories",
+          }}
+        />
+
+        <Footer carousel="true" />
+      </div>
     </div>
-</section>
-
-
-                <section className='h-80 bg-gray-300'>
-                    <div className="container mx-auto p-24">
-                        <h2 className="text-xl mb-4">Topic 3</h2>
-                        <p>Content for Topic 3...</p>
-                    </div>
-                </section>
-
-                <Footer carousel='true' />
-            </div>
-            
-        </div>
-    );
+  )
 }
 
-export default PageTransition(Shop_Selection);
+export default PageTransition(Shop_Selection)
+

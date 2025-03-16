@@ -8,7 +8,7 @@ export default function Footer ({ carousel = false }) {
             <div className="md:fixed bottom-0 w-full z-30 font-anybody">
 
                 {(carousel && (
-                    <div className="block justify-center">
+                    <div className="block justify-center max-md:hidden">
                         <TextCarousel 
                             text={['BE REFRESHED WITH YADOMM', 'BE COOL WITH YOUR STYLE']}
                             colorIndex={[4]}
@@ -26,8 +26,6 @@ export default function Footer ({ carousel = false }) {
                 ))}
                 
                 <footer className="footer text-base-content p-10">
-
-
                     <nav>
                         <h6 className="footer-title">INFOMATIONS</h6>
                         <br className="hidden md:flex" />
