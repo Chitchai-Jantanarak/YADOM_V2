@@ -34,7 +34,7 @@ const NavBar2 = () => {
     };
     
     return (
-        <div className="nav top-0 z-40">
+        <div className="nav relative top-0 z-40">
             <div className="grid grid-cols-3 py-4 justify-between items-center outline-black/5">
 
                 {/* Section - L */}

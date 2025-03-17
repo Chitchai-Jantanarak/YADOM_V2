@@ -99,7 +99,6 @@ const Home = () => {
               
               <section className='expereince-home-sticky-section'>
                 <AdvancedApp />
-                <p>END SECTION</p>
               </section>
 
               <section className='h-lvh'>

@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  OWNER
+}
+
+enum BoneStyle {
+  COLOR
+  PATTERN
+  TEXT
+}
+
+enum ProductType {
+  ACCESSORY     // 2D Accessory for MAIN_PRODUCT
+  MAIN_PRODUCT  // 3D Main Product
+  UNKNOWN       // default
+}
+
+enum OrderStatus {
+  WAITING       // Waiting for user to transmit the order
+  PENDING       // Waiting for admin to confirm
+  CANCELED      // Canceled by user
+  CONFIRMED     // Confirmed by admin
+  COMPLETED     // Completed by admin
+}
+
+// User Table
+model User {
+  id                  Int                 @id @default(autoincrement())
+  name                String
+  email               String              @unique
+  password            String
+  tel                 String
+  address             String
+  role                Role                @default(CUSTOMER)
+
+  cartItems           CartItem[]
+  orders              Order[]
+  modifiedBoneGroups  ModifiedBoneGroup[]
+
+  loginAt             DateTime            @default(now()) @map("login_at")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  deletedAt           DateTime?           @map("deleted_at")
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+
+  @@map("users")
+}
+
+// Product Table (Static)
+model Product {
+  id                  Int                 @id @default(autoincrement())
+  name                String
+  description         String              @db.Text
+  price               Float
+  type                ProductType         @default(UNKNOWN)
+  localUrl            String
+
+  bones               Bone[]              // Related bones for MAIN_PRODUCT
+  cartItems           CartItem[]
+
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  deletedAt           DateTime?           @map("deleted_at")
+
+  @@map("products")
+}
+
+// Bone Table (Static - MAIN_PRODUCT)
+model Bone {
+  id                  Int                 @id @default(autoincrement())
+  productId           Int
+  textId              Int?
+  name                String
+  defDetail           String              @map("def_detail") @db.Text
+  defaultStyle        BoneStyle
+  isConfiguration     Boolean             @default(false)
+
+  modifiedBones       ModifiedBone[]
+  text                Text?               @relation(fields: [textId], references: [id])
+  product             Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("bones")
+}
+
+// Text Table (Static - MAIN_PRODUCT)
+model Text {
+  id                  Int                 @id @default(autoincrement())
+  font                String
+  size                Float
+
+  bones               Bone[]
+
+  @@map("texts")
+}
+
+// Aroma Table (Static - MAIN_PRODUCT) 
+model Aroma {
+  id                  Int                 @id @default(autoincrement())
+  name                String
+  description         String              @db.Text
+  price               Float
+  cartItems           CartItem[]
+
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  deletedAt           DateTime?           @map("deleted_at")
+
+  @@map("aromas")
+}
+
+// ModifiedBone Table (Applied Only (isConfiguration) - MAIN_PRODUCT)
+model ModifiedBone {
+  id                  Int                 @id @default(autoincrement())
+  boneId              Int
+  modDetail           String              @map("mod_detail") @db.Text
+  modifiedBoneGroupId Int?
+
+  bone                Bone                @relation(fields: [boneId], references: [id], onDelete: Cascade)
+  modifiedBoneGroup   ModifiedBoneGroup?  @relation(fields: [modifiedBoneGroupId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime            @default(now())
+
+  @@map("modified_bones")
+}
+
+// ModifiedBoneGroup Table (Group of ModifiedBone - MAIN_PRODUCT && User Request Grouped)
+model ModifiedBoneGroup {
+  id                  Int                 @id @default(autoincrement())
+  userId              Int
+  shareStatus         Boolean             @default(false) // Outside Setter count as false & user Export
+  
+  cartItems           CartItem[] 
+  modifiedBones       ModifiedBone[]
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime            @default(now()) @map("created_at")
+
+  @@map("modified_bone_groups")
+}
+
+// CartItem Table
+model CartItem {
+  id                  Int                 @id @default(autoincrement())
+  productId           Int
+  aromaId             Int?
+  userId              Int
+  modifiedBoneGroupId Int?                
+  orderId             Int?
+  price               Float               // Computed price of the CartItem { (product + aroma) * quantity + delivery }
+  quantity            Int                 @default(1)
+  isUsed              Boolean             @default(true) // Easier for mark used 
+
+  product             Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  aroma               Aroma?              @relation(fields: [aromaId], references: [id], onDelete: SetNull)
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modifiedBoneGroup   ModifiedBoneGroup?  @relation(fields: [modifiedBoneGroupId], references: [id], onDelete: SetNull) 
+  order               Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  deletedAt           DateTime?           @map("deleted_at")
+
+  @@map("cart_items")
+}
+
+// Order Table (Admin Management)
+model Order {
+  id                  Int                 @id @default(autoincrement())
+  userId              Int
+  status              OrderStatus         @default(WAITING) // Status for admin setter
+  
+  cartItems           CartItem[]          // Items in the order
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt  // Admin Setter
+
+  @@map("orders")
+}

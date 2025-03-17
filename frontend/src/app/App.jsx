@@ -8,6 +8,7 @@ import Starter from '../pages/Starter.jsx';
 import Register from '../pages/Register.jsx'
 import PasswordForgot from '../pages/PasswordForgot.jsx';
 import PasswordReset from '../pages/PasswordReset.jsx';
+// import Product from '../pages/Product.jsx'
 import Shop_Accessory from '../pages/Shop_Accessory.jsx'
 import Shop_Product from '../pages/Shop_Product.jsx'
 import Shop_Selection from '../pages/Shop_Selection.jsx';
@@ -23,7 +24,7 @@ function App() {
         <AnimatePresence mode='wait'>
           <Routes location={location} key={location.pathname}>
             {/* !TODO : REMARK THE TEST PAGE */}
-            <Route path="/" element={<Shop_Product />} /> 
+            <Route path="/" element={<Home />} /> 
 
             <Route path="/Starter" element={<Starter />} />
             <Route path="/Login" element={<Login />} />

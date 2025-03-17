@@ -206,7 +206,7 @@ const MainLoader = ({ initialProgress = null }) => {
     const updateLoadingPercent = () => {
       setLoadingPercent(prevPercent => {
         if (prevPercent < 100) {
-          const increment = 6; // loading demo
+          const increment = 20; // loading demo
           const newPercent = Math.min(prevPercent + increment, 100);
 
           // Update the smooth spring value
@@ -238,7 +238,7 @@ const MainLoader = ({ initialProgress = null }) => {
 
     let animationFrame;
     const animate = () => {
-      setTime(prevTime => prevTime + 0.01);
+      setTime(prevTime => prevTime + 0.025);
       animationFrame = requestAnimationFrame(animate);
     };
 
