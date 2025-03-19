@@ -28,17 +28,15 @@ const SectionText = ({
     // Set initial opacity to 1
     gsap.set(containerRef.current, { opacity: 1 });
     
-    // Create the animation timeline
+    // Timeline for background color changes
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: trigger,
         start: startPosition,
         end: endPosition,
         scrub: 1,
-        markers: true, // For debugging
-        toggleActions: "play", // Important for bidirectional control
+        toggleActions: "play", 
         onEnter: () => {
-          // Change background when entering from top
           if (backgroundColor) {
             gsap.to(document.body, {
               backgroundColor: backgroundColor,
@@ -48,7 +46,6 @@ const SectionText = ({
           }
         },
         onEnterBack: () => {
-          // Change background when entering from bottom (scrolling up)
           if (backgroundColor) {
             gsap.to(document.body, {
               backgroundColor: backgroundColor,
@@ -60,17 +57,28 @@ const SectionText = ({
       }
     });
     
-    // Text fade animation
-    tl.to(containerRef.current, {
+    // Separate timeline for opacity animation
+    const t2 = gsap.timeline({
+      scrollTrigger: {
+        trigger: trigger,
+        start: "75% top",
+        end: "bottop top",
+        scrub: 1,
+      }
+    });
+    
+    t2.to(containerRef.current, {
       opacity: 0,
-      duration: 0.5,
-      ease: "power2.out"
+
     });
     
     // Cleanup function
     return () => {
       if (tl.scrollTrigger) {
         tl.scrollTrigger.kill();
+      }
+      if (t2.scrollTrigger) {
+        t2.scrollTrigger.kill();
       }
     };
   }, [triggerElement, startPosition, endPosition, backgroundColor]);
