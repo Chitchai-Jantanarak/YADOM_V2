@@ -67,6 +67,7 @@ model Product {
   localUrl            String
 
   bones               Bone[]              // Related bones for MAIN_PRODUCT
+  colors              ProductColor[]      // Related colors for ACCESSORY
   cartItems           CartItem[]
 
   createdAt           DateTime            @default(now()) @map("created_at")
@@ -74,6 +75,22 @@ model Product {
   deletedAt           DateTime?           @map("deleted_at")
 
   @@map("products")
+}
+
+// ProductColor Table (Static - ACCESSORY)
+model ProductColor {
+  id        Int      @id @default(autoincrement())
+  colorCode String   // Hex code e.g., "#FF5733"
+  colorName String?  // Optional name e.g., "Red"
+  
+  // Relation to Product
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([productId])
 }
 
 // Bone Table (Static - MAIN_PRODUCT)

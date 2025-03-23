@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from "express"
 import bcrypt from "bcrypt"
-import { prisma } from "../index"
-import { generateToken } from "../utils/generateToken"
-import { ApiError } from "../middleware/errorMiddleware"
+import { prisma } from "../lib/prisma.js"
+import { generateToken } from "../utils/generateToken.js"
+import { ApiError } from "../middleware/errorMiddleware.js"
 
 // @desc    Register a new user
 // @route   POST /api/users/register

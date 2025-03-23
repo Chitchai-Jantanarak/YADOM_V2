@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express"
-import { prisma } from "../index"
-import { ApiError } from "../middleware/errorMiddleware"
+import { prisma } from "../lib/prisma.js"
+import { ApiError } from "../middleware/errorMiddleware.js"
 
 // @desc    Create an order
 // @route   POST /api/orders

@@ -1,98 +1,45 @@
-import { useEffect } from "react";
-import Lenis from "lenis";
+"use client"
 
-import PageTransition from "../components/layout/PageTransition";
-import NavBar2 from "../components/layout/NavBar2";
-import Footer from "../components/layout/Footer";
-import ProductGrid from "../components/ui/ProductGrid";
-import TextCarousel from "../components/ui/TextCarousel";
+import { useState, useEffect } from "react"
+import Lenis from "lenis"
+import { productService } from "../services/productService"
+import { useApi } from "../hooks/useApi"
+import { transformProducts } from "../utils/dataTransformers.js"
+
+import PageTransition from "../components/layout/PageTransition"
+import NavBar2 from "../components/layout/NavBar2"
+import Footer from "../components/layout/Footer"
+import ProductGrid from "../components/ui/ProductGrid"
+import TextCarousel from "../components/ui/TextCarousel"
 
 const Shop_Product = () => {
-  // Sample product data
-  const products = [
-    {
-      id: "KC-001",
-      name: "KEY CHAIN",
-      type: "PAW",
-      price: "60.00 ฿",
-      image: "https://placehold.co/300x300/f0f0f0/fff?text=Paw+Keychain",
-      colors: ["#B0C4DE", "#F0F8FF", "#FFDAB9"],
-    },
-    {
-      id: "KC-002",
-      name: "KEY CHAIN",
-      type: "SMILE",
-      price: "60.00 ฿",
-      image: "https://placehold.co/300x300/f0f0f0/fff?text=Smile+Keychain",
-      colors: ["#FFFFE0", "#F0F8FF", "#FFDAB9"],
-    },
-    {
-      id: "KC-003",
-      name: "KEY CHAIN",
-      type: "BUTTERFLY",
-      price: "60.00 ฿",
-      image: "https://placehold.co/300x300/f0f0f0/fff?text=Butterfly+Keychain",
-      colors: ["#F5F5DC", "#FFC0CB", "#FFDAB9"],
-    },
-    {
-      id: "KC-004",
-      name: "KEY CHAIN",
-      type: "MOON",
-      price: "60.00 ฿",
-      image: "https://placehold.co/300x300/f0f0f0/fff?text=Moon+Keychain",
-      colors: ["#E0FFFF", "#B0E0E6", "#FFDAB9"],
-    },
-    {
-      id: "KC-005",
-      name: "KEY CHAIN",
-      type: "ROPE",
-      price: "60.00 ฿",
-      image: "https://placehold.co/300x300/f0f0f0/fff?text=Rope+Keychain",
-      colors: ["#E6E6FA", "#F0F8FF", "#FFDAB9"],
-    },
-    {
-        id: "KC-001",
-        name: "KEY CHAIN",
-        type: "PAW",
-        price: "60.00 ฿",
-        image: "https://placehold.co/300x300/f0f0f0/fff?text=Paw+Keychain",
-        colors: ["#B0C4DE", "#F0F8FF", "#FFDAB9"],
-      },
-      {
-        id: "KC-002",
-        name: "KEY CHAIN",
-        type: "SMILE",
-        price: "60.00 ฿",
-        image: "https://placehold.co/300x300/f0f0f0/fff?text=Smile+Keychain",
-        colors: ["#FFFFE0", "#F0F8FF", "#FFDAB9"],
-      },
-      {
-        id: "KC-003",
-        name: "KEY CHAIN",
-        type: "BUTTERFLY",
-        price: "60.00 ฿",
-        image: "https://placehold.co/300x300/f0f0f0/fff?text=Butterfly+Keychain",
-        colors: ["#F5F5DC", "#FFC0CB", "#FFDAB9"],
-      },
-      {
-        id: "KC-004",
-        name: "KEY CHAIN",
-        type: "MOON",
-        price: "60.00 ฿",
-        image: "https://placehold.co/300x300/f0f0f0/fff?text=Moon+Keychain",
-        colors: ["#E0FFFF", "#B0E0E6", "#FFDAB9"],
-      },
-      {
-        id: "KC-005",
-        name: "KEY CHAIN",
-        type: "ROPE",
-        price: "60.00 ฿",
-        image: "https://placehold.co/300x300/f0f0f0/fff?text=Rope+Keychain",
-        colors: ["#E6E6FA", "#F0F8FF", "#FFDAB9"],
-    },
-  ]
+  const [page, setPage] = useState(1)
+  const [products, setProducts] = useState([])
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0,
+  })
 
-  // Initialize Lenis
+  // Use our custom hook for API calls
+  const { loading, error, execute: fetchAccessories } = useApi(productService.getAccessories)
+
+  // Load accessory products when page changes
+  useEffect(() => {
+    const loadAccessories = async () => {
+      const data = await fetchAccessories(page, 10)
+      if (data) {
+        // Transform backend data to frontend format
+        setProducts(transformProducts(data.products))
+        setPagination(data.pagination)
+      }
+    }
+
+    loadAccessories()
+  }, [page, fetchAccessories])
+
+  // Initialize Lenis smooth scrolling
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -104,44 +51,77 @@ const Shop_Product = () => {
       smoothTouch: false,
       touchMultiplier: 2,
       infinite: false,
-    });
+    })
 
     function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
+      lenis.raf(time)
+      requestAnimationFrame(raf)
     }
 
-    requestAnimationFrame(raf);
+    requestAnimationFrame(raf)
 
     return () => {
-      lenis.destroy();
-    };
-  }, []);
+      lenis.destroy()
+    }
+  }, [])
 
   return (
     <div className="mx-5 min-h-screen bg-white">
       <NavBar2 />
-      
+
       <header className="w-full flex flex-row justify-center mx-auto px-4 py-8 my-4 border-gray-200 border-b-2">
         <article>
-            <h1 className="text-3xl font-bold text-center my-6">ACCESSORIES</h1>
-            <h3>Small gadget accessories • decorate your inhalers</h3>
+          <h1 className="text-3xl font-bold text-center my-6">ACCESSORIES</h1>
+          <h3 className="text-center">Small gadget accessories • decorate your inhalers</h3>
         </article>
       </header>
-        
-        <TextCarousel 
-            text={["ACCESSORIES", "ACCESSORIES", "ACCESSORIES"]}
-            colorIndex={[4]}
-            font="poppins"
-        />
-        
-        <div className="my-8">
-          <ProductGrid products={products} />
-        </div>
-      
+
+      <TextCarousel text={["ACCESSORIES", "ACCESSORIES", "ACCESSORIES"]} colorIndex={[4]} font="poppins" />
+
+      <div className="my-8">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <p className="text-xl">Loading accessories...</p>
+          </div>
+        ) : error ? (
+          <div className="flex justify-center items-center h-64">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : (
+          <>
+            {/* Pass productType="ACCESSORY" to ensure only accessories are displayed */}
+            <ProductGrid products={products} productType="ACCESSORY" />
+
+            {/* Pagination Controls */}
+            {pagination.pages > 1 && (
+              <div className="flex justify-center mt-8 gap-2">
+                <button
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 border rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="px-4 py-2">
+                  Page {page} of {pagination.pages}
+                </span>
+                <button
+                  onClick={() => setPage((prev) => Math.min(pagination.pages, prev + 1))}
+                  disabled={page === pagination.pages}
+                  className="px-4 py-2 border rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       <Footer carousel={1} />
     </div>
-  );
-};
+  )
+}
 
-export default PageTransition(Shop_Product);
+export default PageTransition(Shop_Product)
+

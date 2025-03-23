@@ -4,8 +4,8 @@ import TextCarousel from "../ui/TextCarousel";
 export default function Footer ({ carousel = false }) {
     return (
         <>
-        <div className="md:relative md:h-[500px] md-clip-path">
-            <div className="md:fixed bottom-0 w-full z-30 font-anybody">
+        <div className="md:relative md:h-[500px] w-full z-40 md-clip-path">
+            <div className="bottom-0 w-full z-40 font-anybody">
 
                 {(carousel && (
                     <div className="block justify-center max-md:hidden">
@@ -48,7 +48,7 @@ export default function Footer ({ carousel = false }) {
                         <a className="link link-hover">Purchase History</a>
                         <a className="link link-hover">Account Details</a>
                     </nav>
-                    </footer>
+                </footer>
                 <footer className="footer text-base-content border-base-300 border-t px-10 py-6">
                     <aside className="grid-flow-row items-center">
                         <Logo />

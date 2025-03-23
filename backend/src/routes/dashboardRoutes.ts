@@ -1,5 +1,5 @@
 import express from "express"
-import { protect, owner } from "../middleware/authMiddleware"
+import { protect, owner } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
