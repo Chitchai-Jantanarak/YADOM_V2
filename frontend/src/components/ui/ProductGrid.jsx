@@ -15,7 +15,7 @@ const ProductGrid = ({ products, productType = null }) => {
     : products;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
       {filteredProducts.map((product) => (
         <Link key={product.id} to={`/shop_product/${product.id}`} className="block">
           <ProductCard product={product} />

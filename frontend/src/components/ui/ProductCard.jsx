@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from "react";
+
 const ProductCard = ({ product }) => {
   const { id, name, type, price, image, colors } = product;
 
@@ -6,18 +8,24 @@ const ProductCard = ({ product }) => {
     ? `$${price.toFixed(2)}` 
     : price;
 
-  console.dir(product, { depth: null});
+  const defaultImage = "/unknown_image.png";
+  const validImage = image && image.trim() !== "" ? image : defaultImage;
+
+  const [imageSrc, setImageSrc] = useState(validImage);  
 
   return (
     <div className="flex flex-col h-full overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="flex items-center justify-center h-[200px] my-2 transition-transform hover:scale-105 duration-300">
+        <img 
+          src={imageSrc} 
+          alt={name} 
+          className="max-w-full max-h-[200px] w-full object-contain" 
+          onError={() => setImageSrc(defaultImage)}
+        />
+      </div>
+
       <div className="bg-gray-50 flex-grow">
-        <div className="flex items-center justify-center p-8 h-[200px] transition-transform hover:scale-110 duration-300">
-          <img 
-            src={image || "/placeholder.svg?height=120&width=120"} 
-            alt={name} 
-            className="max-w-full max-h-[120px] object-contain" 
-          />
-        </div>
+        
 
         {/* Color swatches - only show for accessories */}
         <div className="flex justify-end gap-1 mt-2 mb-4 px-4">

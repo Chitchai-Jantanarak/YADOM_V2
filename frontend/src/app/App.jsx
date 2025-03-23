@@ -25,7 +25,7 @@ function App() {
         <AnimatePresence mode='wait'>
           <Routes location={location} key={location.pathname}>
             {/* !TODO : REMARK THE TEST PAGE */}
-            <Route path="/" element={<Shop_Product />} /> 
+            <Route path="/" element={<Home />} /> 
 
             <Route path="/Starter" element={<Starter />} />
             <Route path="/Login" element={<Login />} />
@@ -33,6 +33,7 @@ function App() {
             <Route path="/PasswordForgot" element={<PasswordForgot />} />
             <Route path="/PasswordReset" element={<PasswordReset />} />
 
+            <Route path="/product" element={<Shop_Selection />} />
             <Route path="/Shop_Product" element={<Shop_Product />} />
             <Route path="/Shop_Product/:productId" element={<Shop_Product_Detail />} />
           </Routes>

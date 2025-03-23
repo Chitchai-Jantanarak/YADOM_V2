@@ -114,8 +114,8 @@ const Shop_Selection = () => {
           }}
         />
 
-        <Footer carousel="true" />
       </div>
+      <Footer carousel="true" />
     </div>
   )
 }
