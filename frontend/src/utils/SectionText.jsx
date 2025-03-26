@@ -32,8 +32,8 @@ const SectionText = ({
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: trigger,
-        start: startPosition,
-        end: endPosition,
+        start: 'top top',
+        end: 'bottom top',
         scrub: 1,
         toggleActions: "play", 
         onEnter: () => {
@@ -61,9 +61,10 @@ const SectionText = ({
     const t2 = gsap.timeline({
       scrollTrigger: {
         trigger: trigger,
-        start: "75% top",
-        end: "bottop top",
+        start: startPosition,
+        end: endPosition,
         scrub: 1,
+        markers: 0
       }
     });
     
