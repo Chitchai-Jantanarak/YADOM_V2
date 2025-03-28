@@ -18,7 +18,7 @@ export const StatCards = ({ totalUsers, totalProducts, totalOrders, totalRevenue
         </div>
         <div>
           <p className="text-sm text-gray-500">Total Users</p>
-          <p className="text-2xl font-bold">{totalUsers.toLocaleString()}</p>
+          <p className="text-2xl font-bold">{totalUsers ? totalUsers.toLocaleString() : "0"}</p>
         </div>
       </div>
 
@@ -28,7 +28,7 @@ export const StatCards = ({ totalUsers, totalProducts, totalOrders, totalRevenue
         </div>
         <div>
           <p className="text-sm text-gray-500">Total Products</p>
-          <p className="text-2xl font-bold">{totalProducts.toLocaleString()}</p>
+          <p className="text-2xl font-bold">{totalProducts ? totalProducts.toLocaleString() : "0"}</p>
         </div>
       </div>
 
@@ -38,7 +38,7 @@ export const StatCards = ({ totalUsers, totalProducts, totalOrders, totalRevenue
         </div>
         <div>
           <p className="text-sm text-gray-500">Total Orders</p>
-          <p className="text-2xl font-bold">{totalOrders.toLocaleString()}</p>
+          <p className="text-2xl font-bold">{totalOrders ? totalOrders.toLocaleString() : "0"}</p>
         </div>
       </div>
 
@@ -48,7 +48,7 @@ export const StatCards = ({ totalUsers, totalProducts, totalOrders, totalRevenue
         </div>
         <div>
           <p className="text-sm text-gray-500">Total Revenue</p>
-          <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
+          <p className="text-2xl font-bold">{totalRevenue ? formatCurrency(totalRevenue) : formatCurrency(0)}</p>
         </div>
       </div>
     </div>

@@ -1,132 +1,131 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import Logo from '../components/ui/Logo';
-import PageTransition from '../components/layout/PageTransition';
+"use client"
+
+import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { authService } from "../services/authService"
+import Logo from "../components/ui/Logo"
+import PageTransition from "../components/layout/PageTransition"
 
 const Login = () => {
+  const navigate = useNavigate()
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  })
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-    // const [formData, setFormData] = useState({
-    //     username: "",
-    //     email: "",
-    //     password: "",
-    // });
-    // const [error, setError] = useState("");
-    // const [success, setSuccess] = useState("");
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+  }
 
-    // const handleChange = (e) => {
-    //     const { name, value } = e.target;
-    //     setFormData({ ...formData, [name]: value });
-    // };
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
 
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-    //     setError("");
-    //     setSuccess("");
+    try {
+      await authService.login(formData.email, formData.password)
+      navigate("/dashboard") // Redirect to dashboard after login
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid email or password. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    //     try {
-    //         const response = await axios.post("https://your-backend-url.com/register", formData);
-    //         setSuccess("Registration successful!");
-    //     } catch (err) {
-    //         setError(err.response?.data?.message || "Something went wrong. Please try again.");
-    //     }
-    // };
+  return (
+    <div className="login">
+      <section className="max-h-full max-w-full grid sm:grid-cols-7">
+        <div className="col-span-2 flex bg-red-500 max-sm:hidden"></div>
 
-    return (
-        <div className='login'>  
-            <section className='max-h-full max-w-full grid sm:grid-cols-7'>
+        <div className="col-span-5 grid grid-rows-8">
+          {/* header */}
+          <div className="row-span-1 flex justify-between items-center p-5 m-0 w-full">
+            <Logo />
 
-                <div className="col-span-2 flex bg-red-500 max-sm:hidden"></div>
+            <div className="flex items-center space-x-4">
+              <span className="font-montserrat font-extralight text-xs">No Account yet?</span>
+              <Link to="/register">
+                <button className="font-montserrat font-medium px-5 py-2 border border-black transition-all duration-300 hover:bg-black hover:text-white">
+                  Sign up
+                </button>
+              </Link>
+            </div>
+          </div>
 
-                <div className='col-span-5 grid grid-rows-8'>
+          {/* content */}
+          <div className="row-span-7 flex items-center justify-center">
+            <div className="inline-block font-poppins text-center w-2/3 space-y-5">
+              <h1 className="font-extrabold text-3xl">login</h1>
+              <h2 className="font-montserrat font-light text-sm text-black tracking-wider">
+                PLEASE LOGIN TO CONTINUE TO YOUR ACCOUNT
+              </h2>
 
-                    {/* header */}
-                    <div className='row-span-1 flex justify-between items-center p-5 m-0 w-full'>   
-                        <Logo />
+              {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>}
 
-                        <div className="flex items-center space-x-4">
-                            <span className="font-montserrat font-extralight text-xs">
-                                No Account yet?
-                            </span> 
-                            <Link to="/register">
-                                <button className="font-montserrat font-medium px-5 py-2 border border-black transition-all duration-300 hover:bg-black hover:text-white">
-                                    Sign up
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* content */}
-                    <div className="row-span-7 flex items-center justify-center">
-                        <div className='inline-block font-poppins text-center w-2/3 space-y-5'>
-                            <h1 className='font-extrabold text-3xl'>
-                                login
-                            </h1>
-                            <h2 className='font-montserrat font-light text-sm text-black tracking-wider'>
-                                PLEASE LOGIN TO CONTINUE TO YOUR ACCOUNT
-                            </h2>
-
-                            {/* Form */}
-                            <form className="space-y-3">
-                                {/* Email Field */}
-                                <div className="space-y-2">
-                                    <label
-                                        htmlFor="email"
-                                        className="block text-left font-extrabold"
-                                    >
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        placeholder="Enter your email"
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Password Field */}
-                                <div className='space-y-2'>
-                                    <label
-                                        htmlFor="password"
-                                        className="block text-left font-extrabold"
-                                    >
-                                        Password
-                                    </label>
-                                    <input
-                                        type="password"
-                                        id="password"
-                                        name="password"
-                                        placeholder="Enter your password"
-                                        className="input input-bordered w-full"
-                                        required
-                                    />
-                                </div>
-                                
-                                <Link to="/PasswordForgot">
-                                    <p className='font-montserrat font-light text-sm text-right pt-3 hover:underline'> Forgot Password? </p>
-                                </Link>
-
-                                {/* Submit Button */}
-                                <div>
-                                    <button
-                                        type="submit"
-                                        className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
-                                    >
-                                        Login
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+              {/* Form */}
+              <form className="space-y-3" onSubmit={handleSubmit}>
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-left font-extrabold">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    className="input input-bordered w-full"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
-                
 
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <label htmlFor="password" className="block text-left font-extrabold">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    className="input input-bordered w-full"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-            </section>
+                <Link to="/PasswordForgot">
+                  <p className="font-montserrat font-light text-sm text-right pt-3 hover:underline">
+                    {" "}
+                    Forgot Password?{" "}
+                  </p>
+                </Link>
+
+                {/* Submit Button */}
+                <div>
+                  <button
+                    type="submit"
+                    className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
+                    disabled={loading}
+                  >
+                    {loading ? "Logging in..." : "Login"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-    );
+      </section>
+    </div>
+  )
 }
 
-export default PageTransition(Login);
+export default PageTransition(Login)
+

@@ -2,7 +2,7 @@ import api from "./api"
 
 // Dashboard endpoints
 const endpoints = {
-  stats: "/dashboard/stats",
+  stats: "/api/dashboard/stats",
 }
 
 export const getDashboardStats = async () => {

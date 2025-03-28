@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom"
 import { authService, hasRole } from "../services/authService"
 
-export const ProtectedRoute = ({ children, requiredRoles }) => {
+const ProtectedRoute = ({ children, requiredRoles }) => {
   const location = useLocation()
 
   // try to get the authenticated user
@@ -24,4 +24,6 @@ export const ProtectedRoute = ({ children, requiredRoles }) => {
 
   return children
 }
+
+export default ProtectedRoute
 

@@ -15,6 +15,7 @@ import { useApi } from "../hooks/useApi"
 import { getDashboardStats } from "../services/dashboardService"
 import { getRecentOrders } from "../services/orderService"
 import { authService, ROLES } from "../services/authService"
+import ProtectedRoute from "../utils/ProtectedRoute"
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -37,8 +38,16 @@ export default function Dashboard() {
     execute: refreshOrders,
   } = useApi(getRecentOrders, true, [10])
 
-  const user = authService.getCurrentUser() || authService.getMockCurrentUser()
-  const isOwner = user.role === ROLES.OWNER
+  const currentUser = authService.getCurrentUser()
+  const isOwner = currentUser && currentUser.role === ROLES.OWNER
+  const isAdmin = currentUser && (currentUser.role === ROLES.ADMIN || currentUser.role === ROLES.OWNER)
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!authService.isAuthenticated()) {
+      navigate("/login")
+    }
+  }, [navigate])
 
   // Refresh all dashboard data
   const refreshDashboard = () => {
@@ -79,15 +88,7 @@ export default function Dashboard() {
   const hasError = statsError || ordersError
   const errorMessage = statsError || ordersError
 
-  if (isLoading && !dashboardData && !recentOrders) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
-
-  return (
+  const DashboardContent = () => (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
 
@@ -147,7 +148,11 @@ export default function Dashboard() {
             </div>
           )}
 
-          {dashboardData && (
+          {isLoading && !dashboardData && !recentOrders ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : dashboardData ? (
             <>
               <StatCards
                 totalUsers={dashboardData.totalUsers}
@@ -175,10 +180,17 @@ export default function Dashboard() {
                 onClearFilter={() => setStatusFilter(null)}
               />
             </>
-          )}
+          ) : null}
         </main>
       </div>
     </div>
+  )
+
+  // Wrap the dashboard content with ProtectedRoute to enforce authentication and role-based access
+  return (
+    <ProtectedRoute requiredRoles={[ROLES.ADMIN, ROLES.OWNER]}>
+      <DashboardContent />
+    </ProtectedRoute>
   )
 }
 

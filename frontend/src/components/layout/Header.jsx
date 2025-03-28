@@ -2,15 +2,35 @@
 
 import { useState } from "react"
 import { Bell, LogOut, Menu, Home, Package, Users, Settings } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { authService, ROLES } from "../../services/authService"
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const navigate = useNavigate()
+
+  // Get current user from auth service
+  const currentUser = authService.getCurrentUser()
 
   const handleLogout = () => {
-    // For now, just log to console since we're not using authentication yet
-    console.log("Logout clicked")
-    alert("Logout functionality will be implemented when backend is connected")
+    authService.logout()
+    navigate("/login")
+  }
+
+  // Determine user role display text
+  const getRoleDisplay = () => {
+    if (!currentUser) return "Guest"
+
+    switch (currentUser.role) {
+      case ROLES.OWNER:
+        return "Owner"
+      case ROLES.ADMIN:
+        return "Admin"
+      case ROLES.CUSTOMER:
+        return "Customer"
+      default:
+        return currentUser.role
+    }
   }
 
   return (
@@ -23,7 +43,7 @@ export const Header = () => {
           >
             <Menu className="h-6 w-6 text-gray-600" />
           </button>
-          <h1 className="text-xl md:text-2xl font-bold">ปัดดอมทา</h1>
+          <h1 className="text-xl md:text-2xl font-bold"></h1>
         </div>
 
         <div className="flex items-center gap-4">
@@ -31,6 +51,22 @@ export const Header = () => {
             <Bell className="h-6 w-6 text-gray-600" />
             <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
           </button>
+
+          {currentUser && (
+            <div className="hidden md:flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+                <img
+                  src={`/placeholder.svg?height=32&width=32&text=${currentUser.name.charAt(0)}`}
+                  alt={currentUser.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{currentUser.name}</p>
+                <p className="text-xs text-blue-500">{getRoleDisplay()}</p>
+              </div>
+            </div>
+          )}
 
           <div className="h-6 border-l border-gray-300 mx-2 hidden md:block"></div>
 
@@ -52,17 +88,25 @@ export const Header = () => {
                 &times;
               </button>
             </div>
-            <div className="p-4 border-b mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                  <img src="/placeholder.svg?height=40&width=40" alt="Admin" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <h3 className="font-medium">น้องกฤกฤ</h3>
-                  <p className="text-sm text-blue-500">Admin</p>
+
+            {currentUser && (
+              <div className="p-4 border-b mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                    <img
+                      src={`/placeholder.svg?height=40&width=40&text=${currentUser.name.charAt(0)}`}
+                      alt={currentUser.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">{currentUser.name}</h3>
+                    <p className="text-sm text-blue-500">{getRoleDisplay()}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
             <nav>
               <ul className="space-y-2">
                 <li>
