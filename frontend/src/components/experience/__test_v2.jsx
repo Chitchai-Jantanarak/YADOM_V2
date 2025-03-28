@@ -181,7 +181,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
 
           // Apply position and rotation changes only when we're starting to split
           if (progress > 0.1) {
-            const splitFactor = Math.min((progress - 0.1) * 1.5, 1) // Normalized progress for split animation
+            const splitFactor = Math.min((progress - 0.1) * 0.75, 1) // Normalized progress for split animation
 
             // Left model movement
             innerModelLRef.current.position.x = -splitDistance * splitFactor
@@ -435,11 +435,7 @@ const StickySection = () => {
             endPosition="bottom center"
           >
             <div className="absolute left-[5%] top-[50%] transform -translate-y-1/2 max-w-[500px]">
-              <h2 className="text-4xl font-bold mb-2 uppercase">EXPERIENCE</h2>
-              <h3 className="text-2xl font-medium mb-4 uppercase">THE DIFFERENCE</h3>
-              <p className="text-base leading-relaxed max-w-[400px]">
-                Transform your daily routine with our revolutionary product.
-              </p>
+              
             </div>
           </SectionText>
         </div>
@@ -459,14 +455,7 @@ const StickySection = () => {
             endPosition="bottom center"
           >
             <div className="absolute left-[5%] top-[50%] transform -translate-y-1/2 max-w-[500px]">
-              <h2 className="text-4xl font-bold mb-2 uppercase">JOIN US</h2>
-              <h3 className="text-2xl font-medium mb-4 uppercase">ON THIS JOURNEY</h3>
-              <p className="text-base leading-relaxed max-w-[400px]">
-                Be part of our community and discover new possibilities.
-              </p>
-              <button className="mt-4 px-6 py-2 bg-blue-200 text-blue-800 rounded-full">
-                Subscribe
-              </button>
+              
             </div>
           </SectionText>
         </div>

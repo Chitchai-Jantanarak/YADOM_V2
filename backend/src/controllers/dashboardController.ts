@@ -48,12 +48,41 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
         user: {
           select: {
             name: true,
+            email: true,
+            tel: true,
+            address: true,
+          },
+        },
+        cartItems: {
+          include: {
+            product: true,
+            aroma: true,
           },
         },
       },
     })
 
+    const formattedRecentOrders = recentOrders.map((order) => ({
+      id: order.id,
+      userId: order.userId,
+      user: order.user,
+      cartItems: order.cartItems.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.price,
+        aroma: item.aroma ? item.aroma.name : null,
+      })),
+      status: order.status,
+      createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
+      total: order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    }))
+
     // Order status counts
+    const waitingOrders = await prisma.order.count({
+      where: { status: "WAITING" },
+    })
+
     const pendingOrders = await prisma.order.count({
       where: { status: "PENDING" },
     })
@@ -107,19 +136,83 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       })
     }
 
+    // Get aroma statistics
+    const aromas = await prisma.aroma.findMany({
+      where: { deletedAt: null },
+    })
+
+    const aromaStats = await Promise.all(
+      aromas.map(async (aroma) => {
+        const count = await prisma.cartItem.count({
+          where: {
+            aromaId: aroma.id,
+            order: {
+              status: {
+                in: ["CONFIRMED", "COMPLETED"],
+              },
+            },
+          },
+        })
+
+        return {
+          name: aroma.name,
+          count,
+        }
+      }),
+    )
+
+    // Get product type statistics
+    const productTypes = ["ACCESSORY", "MAIN_PRODUCT", "UNKNOWN"]
+
+    const productTypeStats = await Promise.all(
+      productTypes.map(async (type) => {
+        const count = await prisma.product.count({
+          where: {
+            type,
+            deletedAt: null,
+          },
+        })
+
+        const revenue = await prisma.cartItem.aggregate({
+          _sum: {
+            price: true,
+          },
+          where: {
+            product: {
+              type,
+            },
+            order: {
+              status: {
+                in: ["CONFIRMED", "COMPLETED"],
+              },
+            },
+          },
+        })
+
+        return {
+          type,
+          count,
+          revenue: revenue._sum.price || 0,
+        }
+      }),
+    )
+
     res.json({
       totalUsers,
       totalProducts,
       totalOrders,
       totalRevenue,
-      recentOrders,
+      recentOrders: formattedRecentOrders,
       orderStats: {
+        waiting: waitingOrders,
         pending: pendingOrders,
         confirmed: confirmedOrders,
         completed: completedOrders,
         canceled: canceledOrders,
       },
       monthlySales,
+      aromaStats: aromaStats.sort((a, b) => b.count - a.count),
+      productTypeStats,
     })
   } catch (error) {
     next(error)

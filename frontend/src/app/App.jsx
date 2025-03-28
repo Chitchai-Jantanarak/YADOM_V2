@@ -14,6 +14,9 @@ import Shop_Product from '../pages/Shop_Product.jsx'
 import Shop_Product_Detail from '../pages/Shop_Product_Detail.jsx'
 import Shop_Selection from '../pages/Shop_Selection.jsx';
 
+import About1 from '../pages/About1.jsx';
+import DashboardPage from '../pages/Dashboard.jsx';
+
 import '../styles/App.css';
 
 function App() {
@@ -25,7 +28,7 @@ function App() {
         <AnimatePresence mode='wait'>
           <Routes location={location} key={location.pathname}>
             {/* !TODO : REMARK THE TEST PAGE */}
-            <Route path="/" element={<Home />} /> 
+            <Route path="/" element={<DashboardPage />} /> 
 
             <Route path="/Starter" element={<Starter />} />
             <Route path="/Login" element={<Login />} />

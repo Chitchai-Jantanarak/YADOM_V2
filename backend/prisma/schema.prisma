@@ -79,16 +79,16 @@ model Product {
 
 // ProductColor Table (Static - ACCESSORY)
 model ProductColor {
-  id        Int      @id @default(autoincrement())
-  colorCode String   // Hex code e.g., "#FF5733"
-  colorName String?  // Optional name e.g., "Red"
+  id                  Int                 @id @default(autoincrement())
+  colorCode           String              // Hex code e.g., "#FF5733"
+  colorName           String?             // Optional name e.g., "Red"
   
   // Relation to Product
-  product   Product  @relation(fields: [productId], references: [id])
-  productId Int
+  product             Product             @relation(fields: [productId], references: [id])
+  productId           Int
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   
   @@index([productId])
 }
