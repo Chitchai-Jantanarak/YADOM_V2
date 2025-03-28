@@ -1,48 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence } from 'framer-motion';
+"use client"
+import { Routes, Route, useLocation, Navigate } from "react-router-dom"
+import { AnimatePresence } from "framer-motion"
+import Login from "../pages/Login.jsx"
+import Starter from "../pages/Starter.jsx"
+import Register from "../pages/Register.jsx"
+import PasswordForgot from "../pages/PasswordForgot.jsx"
+import PasswordReset from "../pages/PasswordReset.jsx"
+import Shop_Accessory from "../pages/Shop_Accessory.jsx"
+import Shop_Product from "../pages/Shop_Product.jsx"
+import Shop_Product_Detail from "../pages/Shop_Product_Detail.jsx"
+import Shop_Selection from "../pages/Shop_Selection.jsx"
 
-import Home from '../pages/Home.jsx';
-import Login from '../pages/Login.jsx'
-import Starter from '../pages/Starter.jsx';
-import Register from '../pages/Register.jsx'
-import PasswordForgot from '../pages/PasswordForgot.jsx';
-import PasswordReset from '../pages/PasswordReset.jsx';
-// import Product from '../pages/Product.jsx'
-import Shop_Accessory from '../pages/Shop_Accessory.jsx'
-import Shop_Product from '../pages/Shop_Product.jsx'
-import Shop_Product_Detail from '../pages/Shop_Product_Detail.jsx'
-import Shop_Selection from '../pages/Shop_Selection.jsx';
+// Protected Pages
+import Dashboard from "../pages/Dashboard.jsx"
+import Unauthorized from "../pages/Unauthorized.jsx"
 
-import About1 from '../pages/About1.jsx';
-import DashboardPage from '../pages/Dashboard.jsx';
+// Auth Components
+import ProtectedRoute from "../utils/ProtectedRoute.jsx"
+import { ROLES } from "../services/authService.js"
 
-import '../styles/App.css';
+// Styles
+import "../styles/App.css"
 
 function App() {
-  const location = useLocation();
+  const location = useLocation()
 
   return (
     <>
-      {/* Router and routes */}
-        <AnimatePresence mode='wait'>
-          <Routes location={location} key={location.pathname}>
-            {/* !TODO : REMARK THE TEST PAGE */}
-            <Route path="/" element={<DashboardPage />} /> 
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          {/* Protected Dashboard Route (Home Page) */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute requiredRoles={[ROLES.ADMIN, ROLES.OWNER]}>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="/Starter" element={<Starter />} />
-            <Route path="/Login" element={<Login />} />
-            <Route path="/Register" element={<Register />} />
-            <Route path="/PasswordForgot" element={<PasswordForgot />} />
-            <Route path="/PasswordReset" element={<PasswordReset />} />
+          {/* Public Routes */}
+          <Route path="/Starter" element={<Starter />} />
+          <Route path="/Login" element={<Login />} />
+          <Route path="/Register" element={<Register />} />
+          <Route path="/PasswordForgot" element={<PasswordForgot />} />
+          <Route path="/PasswordReset" element={<PasswordReset />} />
 
-            <Route path="/product" element={<Shop_Selection />} />
-            <Route path="/Shop_Product" element={<Shop_Product />} />
-            <Route path="/Shop_Product/:productId" element={<Shop_Product_Detail />} />
-          </Routes>
-        </AnimatePresence>
+          {/* Shop Routes */}
+          <Route path="/product" element={<Shop_Selection />} />
+          <Route path="/Shop_Product" element={<Shop_Product />} />
+          <Route path="/Shop_Product/:productId" element={<Shop_Product_Detail />} />
+          <Route path="/Shop_Accessory" element={<Shop_Accessory />} />
+
+          {/* Error Routes */}
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/forbidden" element={<Unauthorized />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AnimatePresence>
     </>
-  );
-};
+  )
+}
 
-export default App;
+export default App
+

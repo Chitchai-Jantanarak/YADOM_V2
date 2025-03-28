@@ -2,14 +2,14 @@ import api from "./api"
 
 // Order endpoints
 const endpoints = {
-  list: "/orders",
-  admin: "/orders/admin",
-  details: (id) => `/orders/${id}`,
-  update: (id) => `/orders/${id}`,
-  delete: (id) => `/orders/${id}`,
-  updateStatus: (id) => `/orders/${id}/status`,
-  recent: "/orders/recent",
-  create: "/orders",
+  list: "/api/orders",
+  admin: "/api/orders/admin",
+  details: (id) => `/api/orders/${id}`,
+  update: (id) => `/api/orders/${id}`,
+  delete: (id) => `/api/orders/${id}`,
+  updateStatus: (id) => `/api/orders/${id}/status`,
+  recent: "/api/orders/recent",
+  create: "/api/orders",
 }
 
 export const getOrders = async (params = {}) => {

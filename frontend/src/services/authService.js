@@ -1,25 +1,23 @@
 import api from "./api"
 
+// User roles
 export const ROLES = {
   CUSTOMER: "CUSTOMER",
   ADMIN: "ADMIN",
   OWNER: "OWNER",
 }
 
-export const ORDER_STATUS = {
-  WAITING: "WAITING",
-  PENDING: "PENDING",
-  CANCELED: "CANCELED",
-  CONFIRMED: "CONFIRMED",
-  COMPLETED: "COMPLETED",
-}
-
+// API endpoints for authentication
 const ENDPOINTS = {
   REGISTER: "/api/users/register",
   LOGIN: "/api/users/login",
   PROFILE: "/api/users/profile",
+  FORGOT_PASSWORD: "/api/users/forgot-password",
+  VERIFY_OTP: "/api/users/verify-otp",
+  RESET_PASSWORD: "/api/users/reset-password",
 }
 
+// Check if user has required role
 export const hasRole = (user, requiredRoles) => {
   if (!user) return false
   if (Array.isArray(requiredRoles)) {
@@ -28,27 +26,26 @@ export const hasRole = (user, requiredRoles) => {
   return user.role === requiredRoles
 }
 
-// Mock function for development
-export const getMockCurrentUser = () => {
-  // First try to get from localStorage (for real auth)
-  const user = localStorage.getItem("user")
-  if (user) return JSON.parse(user)
-
-  // For development, return a mock user with OWNER role
-  return {
-    id: 1,
-    name: "น้องกฤกฤ",
-    email: "admin@example.com",
-    role: ROLES.OWNER, // Change to ADMIN or CUSTOMER to test different roles
-    loginAt: new Date().toISOString(),
-  }
-}
-
 export const authService = {
   // Register a new user
   register: async (userData) => {
     try {
       const response = await api.post(ENDPOINTS.REGISTER, userData)
+
+      // Store token and user data in localStorage
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token)
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: response.data.id,
+            name: response.data.name,
+            email: response.data.email,
+            role: response.data.role,
+          }),
+        )
+      }
+
       return response.data
     } catch (error) {
       console.error("Registration error:", error)
@@ -90,12 +87,27 @@ export const authService = {
 
   // Get current user from localStorage
   getCurrentUser: () => {
+    if (typeof window === "undefined") return null
     const user = localStorage.getItem("user")
     return user ? JSON.parse(user) : null
   },
 
+  // Get mock current user for development (only used if no real user is logged in)
+  getMockCurrentUser: () => {
+    if (process.env.NODE_ENV !== "production") {
+      return {
+        id: 1,
+        name: "Development User",
+        email: "dev@example.com",
+        role: ROLES.ADMIN,
+      }
+    }
+    return null
+  },
+
   // Check if user is authenticated
   isAuthenticated: () => {
+    if (typeof window === "undefined") return false
     return !!localStorage.getItem("token")
   },
 
@@ -121,17 +133,46 @@ export const authService = {
     }
   },
 
+  // Request password reset
+  forgotPassword: async (email) => {
+    try {
+      const response = await api.post(ENDPOINTS.FORGOT_PASSWORD, { email })
+      return response.data
+    } catch (error) {
+      console.error("Error requesting password reset:", error)
+      throw error
+    }
+  },
+
+  // Verify OTP
+  verifyOTP: async (email, otp, token) => {
+    try {
+      const response = await api.post(ENDPOINTS.VERIFY_OTP, { email, otp, token })
+      return response.data
+    } catch (error) {
+      console.error("Error verifying OTP:", error)
+      throw error
+    }
+  },
+
+  // Reset password
+  resetPassword: async (email, password, token) => {
+    try {
+      const response = await api.post(ENDPOINTS.RESET_PASSWORD, { email, password, token })
+      return response.data
+    } catch (error) {
+      console.error("Error resetting password:", error)
+      throw error
+    }
+  },
+
   // Check if user has required role
   hasRole: (user, requiredRoles) => {
     return hasRole(user, requiredRoles)
-  },
-
-  // Get mock user for development
-  getMockCurrentUser: () => {
-    return getMockCurrentUser()
   },
 }
 
 // For backward compatibility
 export const getCurrentUser = authService.getCurrentUser
+export const isAuthenticated = authService.isAuthenticated
 
