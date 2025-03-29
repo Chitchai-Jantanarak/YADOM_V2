@@ -151,6 +151,7 @@ import DashboardLayout from "../components/layout/DashboardLayout.jsx"
 // Protected Pages
 
 import DashboardMain from "../pages/dashboard/DashboardMain.jsx"
+import DashboardAnalytics from "../pages/dashboard/DashboardAnalytics.jsx"
 import DashboardCustomers from "../pages/dashboard/DashboardCustomers.jsx"
 import DashboardOrders from "../pages/dashboard/DashboardOrders.jsx"
 
@@ -216,6 +217,15 @@ function App() {
               element={
                 <ProtectedRoute requiredRoles={[ROLES.ADMIN, ROLES.OWNER]}>
                   <DashboardCustomers />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route 
+              path="analytics"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.OWNER]}>
+                  <DashboardAnalytics />
                 </ProtectedRoute>
               }
             />
