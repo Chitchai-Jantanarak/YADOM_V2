@@ -1,18 +1,13 @@
 import express from "express"
+import { addToCart, getCart, updateCartItem, removeCartItem } from "../controllers/cartController.js"
 import { protect } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// These routes will be implemented in cartController.ts
-router
-  .route("/")
-  .post(protect, (req, res) => res.json({ message: "Add to cart endpoint" }))
-  .get(protect, (req, res) => res.json({ message: "Get cart endpoint" }))
+router.post("/", addToCart)
 
-router
-  .route("/:id")
-  .put(protect, (req, res) => res.json({ message: "Update cart item endpoint" }))
-  .delete(protect, (req, res) => res.json({ message: "Remove cart item endpoint" }))
+router.get("/", protect, getCart)
+router.put("/:id", protect, updateCartItem)
+router.delete("/:id", protect, removeCartItem)
 
 export default router
-

@@ -41,6 +41,7 @@ model User {
   password            String
   tel                 String
   address             String
+  imageUrl            String?
   role                Role                @default(CUSTOMER)
 
   cartItems           CartItem[]

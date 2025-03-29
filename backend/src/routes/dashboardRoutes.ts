@@ -1,10 +1,10 @@
 import express from "express"
-import { protect, owner } from "../middleware/authMiddleware.js"
+import { getDashboardStats } from "../controllers/dashboardController.js"
+import { protect, admin, owner } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// These routes will be implemented in dashboardController.ts
-router.get("/stats", protect, owner, (req, res) => res.json({ message: "Dashboard stats endpoint" }))
+// Owner-only route
+router.get("/stats", protect, owner, getDashboardStats)
 
 export default router
-

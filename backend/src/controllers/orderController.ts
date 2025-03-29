@@ -1,6 +1,21 @@
 import type { Request, Response, NextFunction } from "express"
 import { prisma } from "../lib/prisma.js"
 import { ApiError } from "../middleware/errorMiddleware.js"
+import { Prisma } from "@prisma/client"
+
+// Helper function to safely parse IDs
+const parseId = (id: string): number => {
+  try {
+    const parsedId = Number.parseInt(id, 10)
+    if (isNaN(parsedId)) {
+      throw new Error(`Invalid ID format: ${id}`)
+    }
+    return parsedId
+  } catch (error) {
+    console.error(`Error parsing ID: ${id}`, error)
+    throw ApiError.badRequest(`Invalid ID format: ${id}`)
+  }
+}
 
 // @desc    Create an order
 // @route   POST /api/orders
@@ -63,6 +78,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 
     res.status(201).json(completeOrder)
   } catch (error) {
+    console.error("Error in createOrder:", error)
     next(error)
   }
 }
@@ -108,6 +124,63 @@ export const getUserOrders = async (req: Request, res: Response, next: NextFunct
       },
     })
   } catch (error) {
+    console.error("Error in getUserOrders:", error)
+    next(error)
+  }
+}
+
+// @desc    Get recent orders (admin/owner only)
+// @route   GET /api/orders/recent
+// @access  Private/Admin
+export const getRecentOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    console.log("Getting recent orders")
+    const { limit = 10 } = req.query
+
+    const orders = await prisma.order.findMany({
+      take: Number.parseInt(limit as string),
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            tel: true,
+            address: true,
+          },
+        },
+        cartItems: {
+          include: {
+            product: true,
+            aroma: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    // Format the orders to match the expected structure
+    const formattedOrders = orders.map((order) => ({
+      id: order.id,
+      userId: order.userId,
+      user: order.user,
+      cartItems: order.cartItems.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.price,
+        aroma: item.aroma ? item.aroma.name : null,
+      })),
+      status: order.status,
+      createdAt: order.createdAt.toISOString(),
+      updatedAt: order.updatedAt.toISOString(),
+      total: order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    }))
+
+    res.json(formattedOrders)
+  } catch (error) {
+    console.error("Error in getRecentOrders:", error)
     next(error)
   }
 }
@@ -119,47 +192,78 @@ export const getOrderById = async (req: Request, res: Response, next: NextFuncti
   try {
     const { id } = req.params
 
-    const order = await prisma.order.findUnique({
-      where: { id: Number.parseInt(id) },
-      include: {
-        cartItems: {
-          include: {
-            product: true,
-            aroma: true,
-            modifiedBoneGroup: {
-              include: {
-                modifiedBones: {
-                  include: {
-                    bone: true,
+    // Skip this function if the ID is "recent" - this is a fallback in case route ordering doesn't work
+    if (id === "recent") {
+      console.log("Skipping getOrderById for 'recent', this should be handled by getRecentOrders")
+      return next()
+    }
+
+    console.log(`Fetching order with ID: ${id}`)
+
+    // Parse and validate the ID
+    let orderId: number
+    try {
+      orderId = parseId(id)
+      console.log(`Parsed order ID: ${orderId}`)
+    } catch (error) {
+      return next(error)
+    }
+
+    try {
+      const order = await prisma.order.findUnique({
+        where: {
+          id: orderId,
+        },
+        include: {
+          cartItems: {
+            include: {
+              product: true,
+              aroma: true,
+              modifiedBoneGroup: {
+                include: {
+                  modifiedBones: {
+                    include: {
+                      bone: true,
+                    },
                   },
                 },
               },
             },
           },
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            tel: true,
-            address: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              tel: true,
+              address: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!order) {
-      return next(ApiError.notFound("Order not found"))
+      if (!order) {
+        console.log(`Order with ID ${orderId} not found`)
+        return next(ApiError.notFound("Order not found"))
+      }
+
+      // Check if the user is authorized
+      if (req.user.id !== order.userId && req.user.role !== "ADMIN" && req.user.role !== "OWNER") {
+        return next(ApiError.forbidden("Not authorized to view this order"))
+      }
+
+      res.json(order)
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error(`Prisma error in getOrderById: ${error.code}`, error)
+        if (error.code === "P2023") {
+          return next(ApiError.badRequest("Invalid ID format"))
+        }
+      }
+      throw error
     }
-
-    // Check if the user is authorized
-    if (req.user.id !== order.userId && req.user.role !== "ADMIN" && req.user.role !== "OWNER") {
-      return next(ApiError.forbidden("Not authorized to view this order"))
-    }
-
-    res.json(order)
   } catch (error) {
+    console.error("Error in getOrderById:", error)
     next(error)
   }
 }
@@ -176,8 +280,16 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
       return next(ApiError.badRequest("Please provide status"))
     }
 
+    // Parse and validate the ID
+    let orderId: number
+    try {
+      orderId = parseId(id)
+    } catch (error) {
+      return next(error)
+    }
+
     const order = await prisma.order.findUnique({
-      where: { id: Number.parseInt(id) },
+      where: { id: orderId },
     })
 
     if (!order) {
@@ -186,7 +298,7 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
 
     // Update order status
     const updatedOrder = await prisma.order.update({
-      where: { id: Number.parseInt(id) },
+      where: { id: orderId },
       data: {
         status,
         updatedAt: new Date(),
@@ -227,6 +339,7 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
       order: formattedOrder,
     })
   } catch (error) {
+    console.error("Error in updateOrderStatus:", error)
     next(error)
   }
 }
@@ -321,6 +434,7 @@ export const getAllOrders = async (req: Request, res: Response, next: NextFuncti
       },
     })
   } catch (error) {
+    console.error("Error in getAllOrders:", error)
     next(error)
   }
 }
@@ -332,8 +446,16 @@ export const deleteOrder = async (req: Request, res: Response, next: NextFunctio
   try {
     const { id } = req.params
 
+    // Parse and validate the ID
+    let orderId: number
+    try {
+      orderId = parseId(id)
+    } catch (error) {
+      return next(error)
+    }
+
     const order = await prisma.order.findUnique({
-      where: { id: Number.parseInt(id) },
+      where: { id: orderId },
     })
 
     if (!order) {
@@ -341,7 +463,7 @@ export const deleteOrder = async (req: Request, res: Response, next: NextFunctio
     }
 
     await prisma.order.delete({
-      where: { id: Number.parseInt(id) },
+      where: { id: orderId },
     })
 
     res.json({
@@ -349,60 +471,8 @@ export const deleteOrder = async (req: Request, res: Response, next: NextFunctio
       message: `Order ${id} deleted successfully`,
     })
   } catch (error) {
+    console.error("Error in deleteOrder:", error)
     next(error)
   }
 }
 
-// @desc    Get recent orders (admin/owner only)
-// @route   GET /api/orders/recent
-// @access  Private/Admin
-export const getRecentOrders = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { limit = 10 } = req.query
-
-    const orders = await prisma.order.findMany({
-      take: Number.parseInt(limit as string),
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            tel: true,
-            address: true,
-          },
-        },
-        cartItems: {
-          include: {
-            product: true,
-            aroma: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
-
-    // Format the orders to match the expected structure
-    const formattedOrders = orders.map((order) => ({
-      id: order.id,
-      userId: order.userId,
-      user: order.user,
-      cartItems: order.cartItems.map((item) => ({
-        name: item.product.name,
-        quantity: item.quantity,
-        price: item.price,
-        aroma: item.aroma ? item.aroma.name : null,
-      })),
-      status: order.status,
-      createdAt: order.createdAt.toISOString(),
-      updatedAt: order.updatedAt.toISOString(),
-      total: order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    }))
-
-    res.json(formattedOrders)
-  } catch (error) {
-    next(error)
-  }
-}

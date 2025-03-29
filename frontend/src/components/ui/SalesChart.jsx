@@ -183,10 +183,6 @@ export const SalesChart = ({ monthlySales }) => {
             <PieChart className="h-4 w-4" />
             <span className="hidden sm:inline">Area</span>
           </button>
-          <button className="flex items-center gap-1 px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
-            <ArrowUpRight className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
-          </button>
         </div>
       </div>
       <div className="h-80">

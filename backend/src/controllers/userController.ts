@@ -11,7 +11,7 @@ import crypto from "crypto"
 // @access  Public
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password, tel, address } = req.body
+    const { name, email, password, tel, address, imageUrl } = req.body
 
     // Check if user already exists
     const userExists = await prisma.user.findUnique({
@@ -35,6 +35,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         tel: tel || "",
         address: address || "",
         role: "CUSTOMER", // Default role
+        imageUrl: imageUrl || null,
       },
     })
 
@@ -46,6 +47,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       name: user.name,
       email: user.email,
       role: user.role,
+      imageUrl: user.imageUrl,
       token,
     })
   } catch (error) {
@@ -90,6 +92,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       name: user.name,
       email: user.email,
       role: user.role,
+      imageUrl: user.imageUrl,
       token,
     })
   } catch (error) {
@@ -111,6 +114,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
         tel: true,
         address: true,
         role: true,
+        imageUrl: true,
         loginAt: true,
         createdAt: true,
       },
@@ -131,7 +135,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
 // @access  Private
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password, tel, address } = req.body
+    const { name, email, password, tel, address, imageUrl } = req.body
 
     // Get user
     const user = await prisma.user.findUnique({
@@ -148,6 +152,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
     if (email) updateData.email = email
     if (tel) updateData.tel = tel
     if (address) updateData.address = address
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl
 
     // Update password if provided
     if (password) {
@@ -166,6 +171,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
         tel: true,
         address: true,
         role: true,
+        imageUrl: true,
       },
     })
 

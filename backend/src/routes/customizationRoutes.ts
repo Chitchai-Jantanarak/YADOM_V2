@@ -1,17 +1,19 @@
 import express from "express"
+import { 
+  createModifiedBoneGroup, 
+  getModifiedBoneGroup, 
+  getUserModifiedBoneGroups, 
+  updateModifiedBoneGroup 
+} from "../controllers/customizationController.js"
 import { protect } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// These routes will be implemented in customizationController.ts
-router.route("/").post((req, res) => res.json({ message: "Create customization endpoint" }))
+router.post("/", createModifiedBoneGroup)
 
-router
-  .route("/:id")
-  .get((req, res) => res.json({ message: "Get customization endpoint" }))
-  .put(protect, (req, res) => res.json({ message: "Update customization endpoint" }))
+router.get("/:id", getModifiedBoneGroup)
 
-router.get("/user/:userId", protect, (req, res) => res.json({ message: "Get user customizations endpoint" }))
+router.get("/user/:userId", protect, getUserModifiedBoneGroups)
+router.put("/:id", protect, updateModifiedBoneGroup)
 
 export default router
-

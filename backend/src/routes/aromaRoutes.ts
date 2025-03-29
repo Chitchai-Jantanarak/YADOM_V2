@@ -1,19 +1,16 @@
 import express from "express"
+import { getAromas, getAromaById, createAroma, updateAroma, deleteAroma } from "../controllers/aromaController.js"
 import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// These routes will be implemented in aromaController.ts
-router
-  .route("/")
-  .get((req, res) => res.json({ message: "Get aromas endpoint" }))
-  .post(protect, admin, (req, res) => res.json({ message: "Create aroma endpoint" }))
+// Public routes
+router.get("/", getAromas)
+router.get("/:id", getAromaById)
 
-router
-  .route("/:id")
-  .get((req, res) => res.json({ message: "Get aroma endpoint" }))
-  .put(protect, admin, (req, res) => res.json({ message: "Update aroma endpoint" }))
-  .delete(protect, admin, (req, res) => res.json({ message: "Delete aroma endpoint" }))
+// Admin routes
+router.post("/", protect, admin, createAroma)
+router.put("/:id", protect, admin, updateAroma)
+router.delete("/:id", protect, admin, deleteAroma)
 
 export default router
-
