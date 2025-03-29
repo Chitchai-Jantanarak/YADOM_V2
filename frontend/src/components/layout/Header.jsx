@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Bell, LogOut, Menu, Home, Package, Users, Settings } from "lucide-react"
+import { Bell, LogOut, Menu, Home, Package, Users, Settings } from 'lucide-react'
 import { Link, useNavigate } from "react-router-dom"
 import { authService, ROLES } from "../../services/authService"
+import UserAvatar from "../ui/UserAvatar"
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -35,7 +36,7 @@ export const Header = () => {
 
   return (
     <>
-      <header className="bg-white h-16 fixed top-0 right-0 left-0 md:left-64 z-10 flex items-center justify-between px-4 md:px-6 shadow-sm">
+      <header className="bg-white h-24 fixed top-0 right-0 left-0 md:left-64 z-10 flex items-center justify-between px-4 md:px-6 shadow-sm">
         <div className="flex items-center">
           <button
             className="p-2 rounded-full hover:bg-gray-100 md:hidden mr-2"
@@ -51,23 +52,6 @@ export const Header = () => {
             <Bell className="h-6 w-6 text-gray-600" />
             <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
           </button>
-
-          {currentUser && (
-            <div className="hidden md:flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
-                <img
-                  src={`/placeholder.svg?height=32&width=32&text=${currentUser.name.charAt(0)}`}
-                  alt={currentUser.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium">{currentUser.name}</p>
-                <p className="text-xs text-blue-500">{getRoleDisplay()}</p>
-              </div>
-            </div>
-          )}
-
           <div className="h-6 border-l border-gray-300 mx-2 hidden md:block"></div>
 
           <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 hover:text-red-700">
@@ -91,13 +75,9 @@ export const Header = () => {
 
             {currentUser && (
               <div className="p-4 border-b mb-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-6">
                   <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                    <img
-                      src={`/placeholder.svg?height=40&width=40&text=${currentUser.name.charAt(0)}`}
-                      alt={currentUser.name}
-                      className="w-full h-full object-cover"
-                    />
+                    <UserAvatar user={currentUser} size="lg" />
                   </div>
                   <div>
                     <h3 className="font-medium">{currentUser.name}</h3>
@@ -157,4 +137,3 @@ export const Header = () => {
     </>
   )
 }
-

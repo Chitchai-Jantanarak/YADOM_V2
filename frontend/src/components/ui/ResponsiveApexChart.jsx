@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowUpRight, BarChart3, LineChart, PieChart } from "lucide-react"
+import { ArrowUpRight, BarChart3, LineChart, PieChart } from 'lucide-react'
 import dynamic from "next/dynamic"
 
 // Dynamically import ApexCharts to avoid SSR issues
@@ -28,8 +28,12 @@ export const ResponsiveApexChart = ({ monthlySales }) => {
 
   // Format data for ApexCharts
   const categories = monthlySales.map((item) => item.month)
-  const revenueData = monthlySales.map((item) => item.revenue)
-  const ordersData = monthlySales.map((item) => item.orders)
+  const revenueData = monthlySales.map((item) => 
+    typeof item.revenue === 'number' ? parseFloat(item.revenue.toFixed(2)) : item.revenue
+  )
+  const ordersData = monthlySales.map((item) => 
+    typeof item.orders === 'number' ? parseFloat(item.orders.toFixed(0)) : item.orders
+  )
 
   // Chart options
   const options = {
@@ -93,14 +97,25 @@ export const ResponsiveApexChart = ({ monthlySales }) => {
           text: "Revenue",
         },
         labels: {
-          formatter: (value) => "$" + value.toLocaleString(),
+          formatter: (value) => {
+            // Format revenue with dollar sign and 2 decimal places
+            return "$" + parseFloat(value).toFixed(2)
+          },
         },
+        decimalsInFloat: 2,
       },
       {
         opposite: true,
         title: {
           text: "Orders",
         },
+        labels: {
+          formatter: (value) => {
+            // Format orders as whole numbers
+            return parseFloat(value).toFixed(0)
+          },
+        },
+        decimalsInFloat: 0,
       },
     ],
     tooltip: {
@@ -109,9 +124,11 @@ export const ResponsiveApexChart = ({ monthlySales }) => {
       y: {
         formatter: (value, { seriesIndex }) => {
           if (seriesIndex === 0) {
-            return "$" + value.toLocaleString()
+            // Revenue with 2 decimal places
+            return "$" + parseFloat(value).toFixed(2)
           }
-          return value
+          // Orders as whole numbers
+          return parseFloat(value).toFixed(0)
         },
       },
     },
@@ -137,8 +154,15 @@ export const ResponsiveApexChart = ({ monthlySales }) => {
           yaxis: [
             {
               labels: {
-                formatter: (value) => "$" + value / 1000 + "k",
+                formatter: (value) => "$" + parseFloat(value).toFixed(0),
               },
+              decimalsInFloat: 0,
+            },
+            {
+              labels: {
+                formatter: (value) => parseFloat(value).toFixed(0),
+              },
+              decimalsInFloat: 0,
             },
           ],
         },
@@ -200,4 +224,3 @@ export const ResponsiveApexChart = ({ monthlySales }) => {
     </div>
   )
 }
-

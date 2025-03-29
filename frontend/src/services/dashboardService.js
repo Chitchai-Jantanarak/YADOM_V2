@@ -1,12 +1,12 @@
 import api from "./api"
 
-// Dashboard endpoints
-const endpoints = {
-  stats: "/api/dashboard/stats",
-}
-
 export const getDashboardStats = async () => {
-  const response = await api.get(endpoints.stats)
-  return response.data
+  try {
+    const response = await api.get("/api/dashboard/stats")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error)
+    throw new Error(error.response?.data?.message || "Failed to fetch dashboard statistics")
+  }
 }
 

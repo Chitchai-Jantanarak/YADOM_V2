@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { prisma } from "../lib/prisma.js"
 import { ApiError } from "../middleware/errorMiddleware.js"
+import { generateToken } from "../utils/generateToken.js"
+import { sendEmail } from "../utils/emailService.js"
+import { redis } from "../utils/redisUtil.js"
 import { config } from "../config.js"
 import crypto from "crypto"
 
@@ -40,7 +43,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     })
 
     // Generate token
-    const token = generateToken(user.id)
+    const token = generateToken(user.id, user.role)
 
     res.status(201).json({
       id: user.id,
@@ -218,26 +221,33 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     // Generate OTP (6 digits)
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
-    // In a real app, you would store this OTP securely, possibly in Redis
-    // For this example, we'll use the reset token to verify the OTP later
+    // await redis.set(`reset_otp:${user.id}`, otp, 3600)
 
     // Send email with OTP
     try {
-      // In a real app, implement actual email sending
+      // Implement actual email sending
       // await sendEmail({
       //   to: user.email,
       //   subject: "Password Reset Request",
       //   text: `Your OTP for password reset is: ${otp}. This code will expire in 1 hour.`,
+      //   html: `
+      //     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      //       <h2>Password Reset Request</h2>
+      //       <p>You requested a password reset for your account.</p>
+      //       <p>Your OTP for password reset is: <strong>${otp}</strong></p>
+      //       <p>This code will expire in 1 hour.</p>
+      //       <p>If you didn't request this, please ignore this email.</p>
+      //     </div>
+      //   `,
       // })
-
-      // For development, just log the OTP
-      console.log(`OTP for ${user.email}: ${otp}`)
 
       res.json({
         message: "Password reset email sent",
         token: resetToken, // Send token to client for verification
       })
     } catch (error) {
+      console.error("Email sending error:", error)
+
       // If email fails, remove reset token
       await prisma.user.update({
         where: { id: user.id },
@@ -246,6 +256,10 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
           resetTokenExpiry: null,
         },
       })
+
+      // Also remove OTP from Redis
+      // await redis.del(`reset_otp:${user.id}`)
+
       return next(ApiError.internal("Failed to send reset email"))
     }
   } catch (error) {
@@ -282,8 +296,12 @@ export const verifyOTP = async (req: Request, res: Response, next: NextFunction)
       return next(ApiError.badRequest("Invalid reset token"))
     }
 
-    // In a real app, verify the OTP against what was sent
-    // For this example, we'll assume the OTP is valid if the token is valid
+    // Verify OTP against what was stored in Redis
+    // const storedOtp = await redis.get(`reset_otp:${user.id}`)
+    // if (!storedOtp || storedOtp !== otp) {
+    //   return next(ApiError.badRequest("Invalid or expired OTP"))
+    // }
+    // await redis.del(`reset_otp:${user.id}`)
 
     res.json({
       message: "OTP verified successfully",
@@ -338,11 +356,3 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     next(error)
   }
 }
-
-// Generate JWT
-const generateToken = (id: number) => {
-  return jwt.sign({ id }, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn,
-  })
-}
-

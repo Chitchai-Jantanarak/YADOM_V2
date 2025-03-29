@@ -22,7 +22,8 @@
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.10.0"
+    "nodemailer": "^6.10.0",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -31,6 +32,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.11.5",
     "@types/nodemailer": "^6.4.17",
+    "@types/redis": "^4.0.10",
     "eslint": "^8.56.0",
     "prisma": "^5.10.2",
     "ts-node": "^10.9.2",

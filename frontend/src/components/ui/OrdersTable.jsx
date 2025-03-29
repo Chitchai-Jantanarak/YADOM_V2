@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Search, Filter, Trash2, Edit, AlertCircle, Eye } from "lucide-react"
-import { deleteOrder } from "../../services/mockData"
+import { Search, Filter, Trash2, Edit, AlertCircle, Eye } from 'lucide-react'
 
 export const OrdersTable = ({ orders }) => {
   const [searchTerm, setSearchTerm] = useState("")
@@ -26,7 +25,6 @@ export const OrdersTable = ({ orders }) => {
   const handleDelete = (orderId) => {
     if (window.confirm("Are you sure you want to delete this order?")) {
       // Call mock delete function
-      deleteOrder(orderId)
 
       // Update local state to remove the order
       setLocalOrders(localOrders.filter((order) => order.id !== orderId))
@@ -72,10 +70,14 @@ export const OrdersTable = ({ orders }) => {
 
   // Filter and sort orders
   const filteredOrders = localOrders.filter((order) => {
+    // Convert id to string for search
+    const orderId = String(order.id);
+    const userId = String(order.userId);
+    
     // Filter by search term
     const searchMatch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (order.user && order.user.name && order.user.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
     // Filter by status
@@ -89,7 +91,7 @@ export const OrdersTable = ({ orders }) => {
     if (sortBy === "createdAt") {
       return new Date(b.createdAt) - new Date(a.createdAt)
     } else if (sortBy === "orderId") {
-      return a.id.localeCompare(b.id)
+      return String(a.id).localeCompare(String(b.id))
     } else if (sortBy === "status") {
       return a.status.localeCompare(b.status)
     }
@@ -223,4 +225,3 @@ export const OrdersTable = ({ orders }) => {
     </div>
   )
 }
-

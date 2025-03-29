@@ -3,19 +3,19 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowUpRight, RefreshCw } from "lucide-react"
-import { Sidebar } from "../components/layout/Sidebar"
-import { Header } from "../components/layout/Header"
-import { StatCards } from "../components/ui/StatCards"
-import { OrderStatusCards } from "../components/ui/OrderStatusCards"
-import { OrdersTable } from "../components/ui/OrdersTable"
-import { SalesChart } from "../components/ui/SalesChart"
-import { ProductTypeChart } from "../components/ui/ProductTypeChart"
-import { AromaChart } from "../components/ui/AromaChart"
-import { useApi } from "../hooks/useApi"
-import { getDashboardStats } from "../services/dashboardService"
-import { getRecentOrders } from "../services/orderService"
-import { authService, ROLES } from "../services/authService"
-import ProtectedRoute from "../utils/ProtectedRoute"
+import { Sidebar } from "../../components/layout/Sidebar"
+import { Header } from "../../components/layout/Header"
+import { StatCards } from "../../components/ui/StatCards"
+import { OrderStatusCards } from "../../components/ui/OrderStatusCards"
+import { OrdersTable } from "../../components/ui/OrdersTable"
+import { SalesChart } from "../../components/ui/SalesChart"
+import { ProductTypeChart } from "../../components/ui/ProductTypeChart"
+import { AromaChart } from "../../components/ui/AromaChart"
+import { useApi } from "../../hooks/useApi"
+import { getDashboardStats } from "../../services/dashboardService"
+import { getRecentOrders } from "../../services/orderService"
+import { authService, ROLES } from "../../services/authService"
+import ProtectedRoute from "../../utils/ProtectedRoute"
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -108,20 +108,6 @@ export default function Dashboard() {
                 <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
-
-              <button className="px-4 py-2 border rounded-md flex items-center gap-2 hover:bg-gray-50">
-                <span className="hidden sm:inline">Order</span>
-              </button>
-
-              {isOwner && (
-                <button
-                  className="px-4 py-2 border rounded-md flex items-center gap-2 hover:bg-gray-50"
-                  onClick={() => navigate("/analytics")}
-                >
-                  <span className="hidden sm:inline">Analytics</span>
-                  <ArrowUpRight className="h-4 w-4" />
-                </button>
-              )}
             </div>
           </div>
 
