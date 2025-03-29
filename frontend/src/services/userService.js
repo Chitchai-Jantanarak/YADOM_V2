@@ -1,4 +1,4 @@
-import api from "./apiService"
+import api from "./api"
 
 export const register = async (userData) => {
   const response = await api.post("/api/users/register", userData)
@@ -53,3 +53,17 @@ export const resetPassword = async (email, password, token) => {
   return response.data
 }
 
+export const getAllUsers = async () => {
+  try {
+    const response = await api.get("/api/users/admin")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching users:", error)
+    throw error
+  }
+}
+
+export const getUserById = async (id) => {
+  const response = await api.get(`/api/users/${id}`)
+  return response.data
+}

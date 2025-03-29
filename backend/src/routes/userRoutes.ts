@@ -7,8 +7,14 @@ import {
   forgotPassword,
   verifyOTP,
   resetPassword,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  getUserOrders,
+  searchUsers
 } from "../controllers/userController.js"
-import { protect } from "../middleware/authMiddleware.js"
+import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
@@ -22,5 +28,13 @@ router.post("/reset-password", resetPassword)
 // Protected routes
 router.route("/profile").get(protect, getProfile).put(protect, updateProfile)
 
-export default router
+// Admin routes
+router.route("/admin").get(protect, admin, getAllUsers)
+router.route("/search").get(protect, admin, searchUsers)
+router.route("/:id")
+  .get(protect, admin, getUserById)
+  .put(protect, admin, updateUser)
+  .delete(protect, admin, deleteUser)
+router.route("/:id/orders").get(protect, admin, getUserOrders)
 
+export default router

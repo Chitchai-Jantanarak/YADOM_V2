@@ -356,3 +356,186 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     next(error)
   }
 }
+
+// @desc    Get all users (admin only)
+// @route   GET /api/users/admin
+// @access  Private/Admin
+export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        tel: true,
+        address: true,
+        role: true,
+        imageUrl: true,
+        createdAt: true,
+        loginAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    res.json(users)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Get user by ID (admin only)
+// @route   GET /api/users/:id
+// @access  Private/Admin
+export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        tel: true,
+        address: true,
+        role: true,
+        imageUrl: true,
+        createdAt: true,
+        loginAt: true,
+      },
+    })
+
+    if (!user) {
+      return next(ApiError.notFound("User not found"))
+    }
+
+    res.json(user)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Update user (admin only)
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, role, tel, address, imageUrl } = req.body
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+    })
+
+    if (!user) {
+      return next(ApiError.notFound("User not found"))
+    }
+
+    const updateData: any = {}
+    if (name) updateData.name = name
+    if (email) updateData.email = email
+    if (role) updateData.role = role
+    if (tel) updateData.tel = tel
+    if (address) updateData.address = address
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.params.id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        tel: true,
+        address: true,
+        role: true,
+        imageUrl: true,
+      },
+    })
+
+    res.json(updatedUser)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Delete user (admin only)
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+    })
+
+    if (!user) {
+      return next(ApiError.notFound("User not found"))
+    }
+
+    await prisma.user.delete({
+      where: { id: req.params.id },
+    })
+
+    res.json({ message: "User removed" })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Get user orders (admin only)
+// @route   GET /api/users/:id/orders
+// @access  Private/Admin
+export const getUserOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId: req.params.id },
+      include: {
+        cartItems: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    res.json(orders)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Search users (admin only)
+// @route   GET /api/users/search
+// @access  Private/Admin
+export const searchUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { query } = req.query
+
+    if (!query || typeof query !== 'string') {
+      return next(ApiError.badRequest("Search query is required"))
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+          { tel: { contains: query, mode: 'insensitive' } },
+          { address: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        tel: true,
+        address: true,
+        role: true,
+        imageUrl: true,
+        createdAt: true,
+      },
+    })
+
+    res.json(users)
+  } catch (error) {
+    next(error)
+  }
+}

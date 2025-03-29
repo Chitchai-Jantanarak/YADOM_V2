@@ -403,6 +403,11 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
               ))}
             </tbody>
           </table>
+
+          {/* Results count */}
+          <div className="mt-4 text-sm text-gray-500">
+            Showing {filteredOrders.length} of {filteredOrders.length} customers
+          </div>
         </div>
       </div>
     </div>

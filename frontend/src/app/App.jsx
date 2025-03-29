@@ -149,8 +149,11 @@ import AboutSecent from "../pages/AboutSecent.jsx"
 
 import DashboardLayout from "../components/layout/DashboardLayout.jsx"
 // Protected Pages
+
 import DashboardMain from "../pages/dashboard/DashboardMain.jsx"
+import DashboardCustomers from "../pages/dashboard/DashboardCustomers.jsx"
 import DashboardOrders from "../pages/dashboard/DashboardOrders.jsx"
+
 import Unauthorized from "../pages/Unauthorized.jsx"
 
 // Auth Components
@@ -208,6 +211,14 @@ function App() {
               } 
             />
 
+            <Route 
+              path="customers"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.ADMIN, ROLES.OWNER]}>
+                  <DashboardCustomers />
+                </ProtectedRoute>
+              }
+            />
             
           </Route>
 
