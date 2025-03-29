@@ -145,6 +145,8 @@ import Shop_Accessory from "../pages/Shop_Accessory.jsx"
 import Shop_Product from "../pages/Shop_Product.jsx"
 import Shop_Product_Detail from "../pages/Shop_Product_Detail.jsx"
 import Shop_Selection from "../pages/Shop_Selection.jsx"
+import AboutSecent from "../pages/AboutSecent.jsx"
+
 import DashboardLayout from "../components/layout/DashboardLayout.jsx"
 // Protected Pages
 import DashboardMain from "../pages/dashboard/DashboardMain.jsx"
@@ -173,6 +175,7 @@ function App() {
           <Route path="/Register" element={<Register />} />
           <Route path="/PasswordForgot" element={<PasswordForgot />} />
           <Route path="/PasswordReset" element={<PasswordReset />} />
+          <Route path="/AboutSecent" element={<AboutSecent />} />
 
           {/* Shop Routes */}
           <Route path="/product" element={<Shop_Selection />} />
