@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import OtpInput from "react-otp-input"
 import Logo from "../components/ui/Logo"
@@ -15,6 +15,46 @@ const PasswordForgot = () => {
   const [resetToken, setResetToken] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+
+  // Load saved state from sessionStorage on component mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem("passwordResetState")
+    if (savedState) {
+      const state = JSON.parse(savedState)
+      setSteps(state.steps || 1)
+      setEmail(state.email || "")
+      setResetToken(state.resetToken || "")
+      setEmailSent(state.emailSent || false)
+
+      // Only set OTP if we're on step 2
+      if (state.steps === 2 && state.otp) {
+        setOtp(state.otp)
+      }
+    }
+  }, [])
+
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      steps,
+      email,
+      resetToken,
+      emailSent,
+      otp: steps === 2 ? otp : "", // Only save OTP if we're on step 2
+    }
+    sessionStorage.setItem("passwordResetState", JSON.stringify(stateToSave))
+  }, [steps, email, resetToken, emailSent, otp])
+
+  // Clear saved state when component unmounts or when reset is complete
+  useEffect(() => {
+    return () => {
+      if (steps === 3) {
+        // Clear state when reset is complete and user navigates away
+        sessionStorage.removeItem("passwordResetState")
+      }
+    }
+  }, [steps])
 
   const handleOtpChange = (otp) => {
     setOtp(otp)
@@ -32,8 +72,10 @@ const PasswordForgot = () => {
     try {
       const response = await authService.forgotPassword(email)
       setResetToken(response.token)
+      setEmailSent(true)
       setSteps(2)
     } catch (err) {
+      console.error("Error:", err)
       setError(err.response?.data?.message || "Failed to send reset email. Please try again.")
     } finally {
       setLoading(false)
@@ -54,6 +96,38 @@ const PasswordForgot = () => {
       setSteps(3)
     } catch (err) {
       setError(err.response?.data?.message || "Invalid code. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Function to restart the process
+  const handleRestart = () => {
+    sessionStorage.removeItem("passwordResetState")
+    setSteps(1)
+    setEmail("")
+    setOtp("")
+    setResetToken("")
+    setEmailSent(false)
+    setError("")
+  }
+
+  // Function to resend verification code
+  const handleResendCode = async () => {
+    setError("")
+    setLoading(true)
+
+    try {
+      const response = await authService.forgotPassword(email)
+      setResetToken(response.token)
+      setEmailSent(true)
+      setOtp("")
+      setError("")
+      // Show success message
+      setError("Verification code resent successfully!")
+    } catch (err) {
+      console.error("Error:", err)
+      setError(err.response?.data?.message || "Failed to resend verification code. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -88,7 +162,11 @@ const PasswordForgot = () => {
                   </h2>
 
                   {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>
+                    <div
+                      className={`${error.includes("successfully") ? "bg-green-100 border-green-400 text-green-700" : "bg-red-100 border-red-400 text-red-700"} px-4 py-3 rounded border`}
+                    >
+                      {error}
+                    </div>
                   )}
 
                   {/* Form */}
@@ -133,12 +211,22 @@ const PasswordForgot = () => {
                 <div className="inline-block font-poppins text-center w-2/3 space-y-5">
                   <h1 className="font-extrabold text-3xl">Check your email</h1>
                   <h2 className="font-montserrat font-light text-sm text-black tracking-wider">
-                    We sent a reset link to {email}
+                    We sent a verification code to {email}
                     <br /> Enter the 6-digit code mentioned in the email
                   </h2>
 
                   {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>
+                    <div
+                      className={`${error.includes("successfully") ? "bg-green-100 border-green-400 text-green-700" : "bg-red-100 border-red-400 text-red-700"} px-4 py-3 rounded border`}
+                    >
+                      {error}
+                    </div>
+                  )}
+
+                  {emailSent && !error && (
+                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                      Email sent successfully! Check your inbox for the verification code.
+                    </div>
                   )}
 
                   <br />
@@ -158,7 +246,7 @@ const PasswordForgot = () => {
                     />
                   </div>
 
-                  <div className="mt-6">
+                  <div className="mt-6 flex flex-col space-y-3">
                     <button
                       onClick={handleVerifyOTP}
                       className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
@@ -166,6 +254,16 @@ const PasswordForgot = () => {
                     >
                       {loading ? "Verifying..." : "Verify Code"}
                     </button>
+
+                    <div className="flex justify-center space-x-4 text-sm">
+                      <button onClick={handleResendCode} className="text-blue-600 hover:underline" disabled={loading}>
+                        Resend Code
+                      </button>
+                      <span className="text-gray-400">|</span>
+                      <button onClick={handleRestart} className="text-blue-600 hover:underline" disabled={loading}>
+                        Change Email
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

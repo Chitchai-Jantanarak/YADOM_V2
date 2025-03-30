@@ -158,7 +158,7 @@ import DashboardOrders from "../pages/dashboard/DashboardOrders.jsx"
 import Unauthorized from "../pages/Unauthorized.jsx"
 
 // Auth Components
-import ProtectedRoute from "../utils/ProtectedRoute.jsx"
+import ProtectedRoute from "../hoc/ProtectedRoute.jsx"
 import { ROLES } from "../services/authService.js"
 
 // Styles

@@ -8,6 +8,8 @@ import Logo from "../components/ui/Logo"
 import Door from "../components/ui/Door"
 import { countryCodes } from "../utils/CountryCode"
 
+import withAuthProtection from "../hoc/withAuthProtection"
+
 const Register = () => {
   const navigate = useNavigate()
   const [selectedCountry, setSelectedCountry] = useState("+66")
@@ -56,8 +58,10 @@ const Register = () => {
         address: "", // Can be updated later in profile
       }
 
-      await authService.register(userData)
-      navigate("/dashboard") // Redirect to dashboard after registration
+      const response = await authService.register(userData)
+
+      // By default, new users are CUSTOMER role, so redirect to home
+      navigate("/")
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.")
     } finally {
@@ -71,7 +75,9 @@ const Register = () => {
         <div className="max-h-lvh grid grid-rows-8 md:mx-36 bg-white">
           {/* header */}
           <div className="row-span-1 flex justify-center items-center p-5 m-0 w-full">
-            <Logo width="160" height="60" />
+            <Link to="/">
+              <Logo width="160" height="60" />
+            </Link>
           </div>
 
           {/* content */}
@@ -211,5 +217,8 @@ const Register = () => {
   )
 }
 
-export default PageTransition(Register)
+// First apply PageTransition, then apply withAuthProtection
+export default withAuthProtection(PageTransition(Register), {
+  redirectAuthenticated: true,
+})
 

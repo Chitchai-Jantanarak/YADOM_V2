@@ -1,12 +1,9 @@
 import type { Request, Response, NextFunction } from "express"
 import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
 import { prisma } from "../lib/prisma.js"
 import { ApiError } from "../middleware/errorMiddleware.js"
 import { generateToken } from "../utils/generateToken.js"
 import { sendEmail } from "../utils/emailService.js"
-import { redis } from "../utils/redisUtil.js"
-import { config } from "../config.js"
 import crypto from "crypto"
 
 // @desc    Register a new user
@@ -190,6 +187,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email } = req.body
+    console.log(`Password reset requested for email: ${email}`)
 
     // Find user by email
     const user = await prisma.user.findUnique({
@@ -197,49 +195,74 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     })
 
     if (!user) {
+      console.log(`User not found for email: ${email}`)
       return next(ApiError.notFound("User not found"))
     }
 
     // Generate reset token
     const resetToken = crypto.randomBytes(20).toString("hex")
+    console.log(`Generated reset token for ${email}`)
 
     // Hash token and set to resetToken field
     const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex")
 
+    // Generate OTP (6 digits)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    console.log(`Generated OTP for ${email}: ${otp}`)
+
+    // Hash OTP for storage
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex")
+
     // Set token expiry (1 hour)
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000)
 
-    // Update user with reset token
+    // Update user with reset token and OTP hash
     await prisma.user.update({
       where: { id: user.id },
       data: {
         resetToken: resetTokenHash,
         resetTokenExpiry,
+        otpHash, // Store OTP hash in database
       },
     })
+    console.log(`Updated user record with reset token and OTP hash`)
 
-    // Generate OTP (6 digits)
-    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    // Prepare email content with improved design
+    const emailContent = {
+      to: user.email,
+      subject: "ํPassword Reset Verification Code",
+      text: `Your verification code for password reset is: ${otp}. This code will expire in 1 hour. If you didn't request this reset, please ignore this message or contact support.`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #3b82f6; margin-bottom: 5px; font-size: 24px;">Password Reset</h1>
+            <p style="color: #6b7280; font-size: 16px;">Secure Verification Code</p>
+          </div>
+          
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <p style="margin-bottom: 10px; font-size: 16px; color: #374151;">Hello,</p>
+            <p style="margin-bottom: 20px; font-size: 16px; color: #374151;">We received a request to reset your password. Use the verification code below to complete the process:</p>
+            
+            <div style="background-color: #ffffff; border: 1px dashed #d1d5db; border-radius: 5px; padding: 15px; text-align: center; margin-bottom: 20px;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #3b82f6;">${otp}</span>
+            </div>
+            
+            <p style="font-size: 14px; color: #6b7280;">This code will expire in 1 hour.</p>
+          </div>
+          
+          <div style="font-size: 14px; color: #6b7280; border-top: 1px solid #e0e0e0; padding-top: 20px;">
+            <p>If you didn't request a password reset, you can safely ignore this email.</p>
+            <p>For security reasons, please do not share this code with anyone.</p>
+          </div>
+        </div>
+      `,
+    }
 
-    // await redis.set(`reset_otp:${user.id}`, otp, 3600)
-
-    // Send email with OTP
     try {
-      // Implement actual email sending
-      // await sendEmail({
-      //   to: user.email,
-      //   subject: "Password Reset Request",
-      //   text: `Your OTP for password reset is: ${otp}. This code will expire in 1 hour.`,
-      //   html: `
-      //     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      //       <h2>Password Reset Request</h2>
-      //       <p>You requested a password reset for your account.</p>
-      //       <p>Your OTP for password reset is: <strong>${otp}</strong></p>
-      //       <p>This code will expire in 1 hour.</p>
-      //       <p>If you didn't request this, please ignore this email.</p>
-      //     </div>
-      //   `,
-      // })
+      // Send email
+      console.log(`Attempting to send email to ${user.email}`)
+      await sendEmail(emailContent)
+      console.log(`Email sent successfully to ${user.email}`)
 
       res.json({
         message: "Password reset email sent",
@@ -248,21 +271,20 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     } catch (error) {
       console.error("Email sending error:", error)
 
-      // If email fails, remove reset token
+      // Remove reset token if email fails
       await prisma.user.update({
         where: { id: user.id },
         data: {
           resetToken: null,
           resetTokenExpiry: null,
+          otpHash: null,
         },
       })
 
-      // Also remove OTP from Redis
-      // await redis.del(`reset_otp:${user.id}`)
-
-      return next(ApiError.internal("Failed to send reset email"))
+      return next(ApiError.internal(`Failed to send reset email: ${error.message}`))
     }
   } catch (error) {
+    console.error("Password reset error:", error)
     next(error)
   }
 }
@@ -279,7 +301,7 @@ export const verifyOTP = async (req: Request, res: Response, next: NextFunction)
       where: { email },
     })
 
-    if (!user || !user.resetToken || !user.resetTokenExpiry) {
+    if (!user || !user.resetToken || !user.resetTokenExpiry || !user.otpHash) {
       return next(ApiError.badRequest("Invalid or expired reset token"))
     }
 
@@ -296,12 +318,13 @@ export const verifyOTP = async (req: Request, res: Response, next: NextFunction)
       return next(ApiError.badRequest("Invalid reset token"))
     }
 
-    // Verify OTP against what was stored in Redis
-    // const storedOtp = await redis.get(`reset_otp:${user.id}`)
-    // if (!storedOtp || storedOtp !== otp) {
-    //   return next(ApiError.badRequest("Invalid or expired OTP"))
-    // }
-    // await redis.del(`reset_otp:${user.id}`)
+    // Hash the provided OTP to compare with stored hash
+    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex")
+
+    // Verify OTP matches
+    if (hashedOtp !== user.otpHash) {
+      return next(ApiError.badRequest("Invalid OTP"))
+    }
 
     res.json({
       message: "OTP verified successfully",
@@ -348,6 +371,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         password: hashedPassword,
         resetToken: null,
         resetTokenExpiry: null,
+        otpHash: null,
       },
     })
 

@@ -23,7 +23,7 @@ import { getProducts } from "../../services/productService"
 import { getAromas } from "../../services/aromaService"
 import { getDashboardStats } from "../../services/dashboardService"
 import { ROLES } from "../../services/authService"
-import ProtectedRoute from "../../utils/ProtectedRoute"
+import ProtectedRoute from "../../hoc/ProtectedRoute"
 
 // Chart libraries
 import { ResponsiveBar } from "@nivo/bar"

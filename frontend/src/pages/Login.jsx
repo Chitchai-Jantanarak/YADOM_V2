@@ -1,13 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { authService } from "../services/authService"
+import { Link, useNavigate, useLocation } from "react-router-dom"
+import { authService, ROLES } from "../services/authService"
 import Logo from "../components/ui/Logo"
 import PageTransition from "../components/layout/PageTransition"
 
+import withAuthProtection from "../hoc/withAuthProtection"
+
 const Login = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -26,8 +29,19 @@ const Login = () => {
     setLoading(true)
 
     try {
-      await authService.login(formData.email, formData.password)
-      navigate("/dashboard") // Redirect to dashboard after login
+      const response = await authService.login(formData.email, formData.password)
+
+      // Get the return path from location state or default paths based on role
+      const returnPath = location.state?.returnPath || "/"
+      const user = authService.getCurrentUser()
+
+      if (user && authService.hasRole(user, [ROLES.ADMIN, ROLES.OWNER])) {
+        // Admin and Owner users go to dashboard main
+        navigate("/dashboard/main")
+      } else {
+        // Regular customers go to previous page or home
+        navigate(returnPath)
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password. Please try again.")
     } finally {
@@ -43,7 +57,9 @@ const Login = () => {
         <div className="col-span-5 grid grid-rows-8">
           {/* header */}
           <div className="row-span-1 flex justify-between items-center p-5 m-0 w-full">
-            <Logo />
+            <Link to="/">
+              <Logo />
+            </Link>
 
             <div className="flex items-center space-x-4">
               <span className="font-montserrat font-extralight text-xs">No Account yet?</span>
@@ -127,5 +143,7 @@ const Login = () => {
   )
 }
 
-export default PageTransition(Login)
+export default withAuthProtection(PageTransition(Login), {
+  redirectAuthenticated: true,
+})
 

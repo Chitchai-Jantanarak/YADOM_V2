@@ -5,7 +5,7 @@ import { CustomersTable } from "../../components/ui/CustomersTable"
 import { getAllUsers } from "../../services/userService"
 import { getAllOrders } from "../../services/orderService"
 import { ROLES } from "../../services/authService"
-import ProtectedRoute from "../../utils/ProtectedRoute"
+import ProtectedRoute from "../../hoc/ProtectedRoute"
 
 const DashboardCustomers = () => {
   const [customers, setCustomers] = useState([])

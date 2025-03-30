@@ -7,7 +7,7 @@ import { OrdersTable } from "../../components/ui/OrdersTable"
 import { useApi } from "../../hooks/useApi"
 import { getAllOrders } from "../../services/orderService"
 import { ROLES } from "../../services/authService"
-import ProtectedRoute from "../../utils/ProtectedRoute"
+import ProtectedRoute from "../../hoc/ProtectedRoute"
 
 export default function OrdersPage() {
   const navigate = useNavigate()

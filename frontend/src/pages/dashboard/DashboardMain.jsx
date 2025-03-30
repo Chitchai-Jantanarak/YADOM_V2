@@ -15,7 +15,7 @@ import { useApi } from "../../hooks/useApi"
 import { getDashboardStats } from "../../services/dashboardService"
 import { getRecentOrders } from "../../services/orderService"
 import { authService, ROLES } from "../../services/authService"
-import ProtectedRoute from "../../utils/ProtectedRoute"
+import ProtectedRoute from "../../hoc/ProtectedRoute"
 
 export default function Dashboard() {
   const navigate = useNavigate()

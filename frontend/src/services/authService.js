@@ -92,19 +92,6 @@ export const authService = {
     return user ? JSON.parse(user) : null
   },
 
-  // Get mock current user for development (only used if no real user is logged in)
-  getMockCurrentUser: () => {
-    if (process.env.NODE_ENV !== "production") {
-      return {
-        id: 1,
-        name: "Development User",
-        email: "dev@example.com",
-        role: ROLES.ADMIN,
-      }
-    }
-    return null
-  },
-
   // Check if user is authenticated
   isAuthenticated: () => {
     if (typeof window === "undefined") return false
@@ -134,8 +121,10 @@ export const authService = {
   },
 
   // Request password reset
+  // Request password reset
   forgotPassword: async (email) => {
     try {
+      console.log(`Requesting password reset for email: ${email}`)
       const response = await api.post(ENDPOINTS.FORGOT_PASSWORD, { email })
       return response.data
     } catch (error) {

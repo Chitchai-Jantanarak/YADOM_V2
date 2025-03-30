@@ -18,21 +18,61 @@ const PasswordReset = () => {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [validParams, setValidParams] = useState(false)
 
   useEffect(() => {
-    // Get email and token from URL query parameters
+    // First try to get params from URL
     const params = new URLSearchParams(location.search)
-    const emailParam = params.get("email")
-    const tokenParam = params.get("token")
+    let emailParam = params.get("email")
+    let tokenParam = params.get("token")
+
+    // If not in URL, try to get from sessionStorage
+    if (!emailParam || !tokenParam) {
+      const savedState = sessionStorage.getItem("passwordResetParams")
+      if (savedState) {
+        const state = JSON.parse(savedState)
+        emailParam = state.email
+        tokenParam = state.token
+      }
+    }
 
     if (!emailParam || !tokenParam) {
       setError("Invalid reset link. Please request a new password reset.")
+      setValidParams(false)
       return
     }
 
+    // Save params to sessionStorage for persistence
+    sessionStorage.setItem("passwordResetParams", JSON.stringify({ email: emailParam, token: tokenParam }))
+
     setEmail(emailParam)
     setToken(tokenParam)
+    setValidParams(true)
   }, [location])
+
+  // Load form state if available
+  useEffect(() => {
+    const savedFormState = sessionStorage.getItem("passwordResetFormState")
+    if (savedFormState) {
+      setFormData(JSON.parse(savedFormState))
+    }
+  }, [])
+
+  // Save form state when it changes
+  useEffect(() => {
+    if (formData.password || formData.confirmPassword) {
+      sessionStorage.setItem("passwordResetFormState", JSON.stringify(formData))
+    }
+  }, [formData])
+
+  // Clear saved state when reset is complete
+  useEffect(() => {
+    if (success) {
+      sessionStorage.removeItem("passwordResetParams")
+      sessionStorage.removeItem("passwordResetFormState")
+      sessionStorage.removeItem("passwordResetState") // Clear the state from PasswordForgot too
+    }
+  }, [success])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -106,54 +146,67 @@ const PasswordReset = () => {
                 </div>
               )}
 
+              {!validParams && !success && (
+                <div className="mt-4">
+                  <p className="text-red-600 mb-4">Invalid reset link.</p>
+                  <Link to="/PasswordForgot">
+                    <button className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1">
+                      Request New Reset Link
+                    </button>
+                  </Link>
+                </div>
+              )}
+
               {/* Form */}
-              <form className="space-y-3" onSubmit={handleSubmit}>
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <label htmlFor="password" className="block text-left font-extrabold">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Password"
-                    className="input input-bordered w-full"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    disabled={success}
-                  />
-                </div>
+              {validParams && !success && (
+                <form className="space-y-3" onSubmit={handleSubmit}>
+                  {/* Password Field */}
+                  <div className="space-y-2">
+                    <label htmlFor="password" className="block text-left font-extrabold">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      placeholder="Password"
+                      className="input input-bordered w-full"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      disabled={success}
+                    />
+                  </div>
 
-                {/* Confirm Password Field */}
-                <div className="space-y-2">
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    placeholder="Confirm Password"
-                    className="input input-bordered w-full"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    disabled={success}
-                  />
-                </div>
+                  {/* Confirm Password Field */}
+                  <div className="space-y-2">
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      placeholder="Confirm Password"
+                      className="input input-bordered w-full"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required
+                      disabled={success}
+                    />
+                  </div>
 
-                <br />
+                  <br />
 
-                {/* Submit Button */}
-                <div>
-                  <button
-                    type="submit"
-                    className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
-                    disabled={loading || success}
-                  >
-                    {loading ? "Updating..." : "Update Password"}
-                  </button>
-                </div>
-              </form>
+                  {/* Submit Button */}
+                  <div>
+                    <button
+                      type="submit"
+                      className="px-12 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 util-textshadow-default focus:ring-offset-1"
+                      disabled={loading || success}
+                    >
+                      {loading ? "Updating..." : "Update Password"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>
