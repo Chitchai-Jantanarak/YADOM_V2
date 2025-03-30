@@ -1,4 +1,3 @@
-import { isImageUrlValid, getFallbackImage } from "../utils/imageUtils"
 import api from "./api"
 
 /**
@@ -8,7 +7,7 @@ const imageService = {
   /**
    * Upload an image file
    * @param {File} file - The image file to upload
-   * @returns {Promise<{success: boolean, url: string, error?: string}>}
+   * @returns {Promise<Object>} - Response with URL and success status
    */
   uploadImage: async (file) => {
     try {
@@ -24,7 +23,8 @@ const imageService = {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await api.post("/upload", formData, {
+      // Change this line to use the correct endpoint
+      const response = await api.post("/api/upload/profile-image", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -44,10 +44,27 @@ const imageService = {
   },
 
   /**
-   * Upload an image from a URL
-   * @param {string} url - The URL of the image to upload
-   * @returns {Promise<{success: boolean, url: string, error?: string}>}
+   * Get a user's profile image
+   * @param {string} userId - The user ID
+   * @returns {Promise<Object>} - Response with URL and success status
    */
+  getProfileImage: async (userId) => {
+    try {
+      const response = await api.get(`/api/upload/profile-image/${userId}`)
+      return {
+        success: true,
+        url: response.data.url,
+      }
+    } catch (error) {
+      console.error("Error fetching profile image:", error)
+      return {
+        success: false,
+        error: error.response?.data?.message || "Failed to fetch profile image",
+      }
+    }
+  },
+
+  // Also update the uploadFromUrl function if you're using it
   uploadFromUrl: async (url) => {
     try {
       if (!url) {
@@ -57,7 +74,8 @@ const imageService = {
       const formData = new FormData()
       formData.append("url", url)
 
-      const response = await api.post("/upload", formData)
+      // Change this line to use the correct endpoint
+      const response = await api.post("/api/upload/profile-image", formData)
 
       return {
         success: true,
@@ -70,64 +88,6 @@ const imageService = {
         error: error.response?.data?.message || error.message || "Failed to upload image from URL",
       }
     }
-  },
-
-  /**
-   * Get image URL with validation and fallback
-   * @param {string} url - The image URL to validate
-   * @param {string} fallbackType - The type of fallback to use
-   * @returns {Promise<string>} - The validated URL or fallback
-   */
-  getValidatedImageUrl: async (url, fallbackType = "generic") => {
-    if (!url) return getFallbackImage(fallbackType)
-
-    const isValid = await isImageUrlValid(url)
-    return isValid ? url : getFallbackImage(fallbackType)
-  },
-
-  /**
-   * Preload an image to ensure it's in the browser cache
-   * @param {string} url - The image URL to preload
-   * @returns {Promise<boolean>} - Whether preloading was successful
-   */
-  preloadImage: (url) => {
-    return new Promise((resolve) => {
-      if (!url) {
-        resolve(false)
-        return
-      }
-
-      const img = new Image()
-      img.onload = () => resolve(true)
-      img.onerror = () => resolve(false)
-      img.src = url
-    })
-  },
-
-  /**
-   * Get dimensions of an image
-   * @param {string} url - The image URL
-   * @returns {Promise<{width: number, height: number}>}
-   */
-  getImageDimensions: (url) => {
-    return new Promise((resolve, reject) => {
-      if (!url) {
-        reject(new Error("No URL provided"))
-        return
-      }
-
-      const img = new Image()
-      img.onload = () => {
-        resolve({
-          width: img.width,
-          height: img.height,
-        })
-      }
-      img.onerror = () => {
-        reject(new Error("Failed to load image"))
-      }
-      img.src = url
-    })
   },
 }
 

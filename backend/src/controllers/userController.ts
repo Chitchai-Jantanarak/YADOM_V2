@@ -1,5 +1,7 @@
 import type { Request, Response, NextFunction } from "express"
 import bcrypt from "bcryptjs"
+import path from "path"
+import fs from "fs"
 import { prisma } from "../lib/prisma.js"
 import { ApiError } from "../middleware/errorMiddleware.js"
 import { generateToken } from "../utils/generateToken.js"
@@ -176,6 +178,66 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
     })
 
     res.json(updatedUser)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Update user profile image
+// @route   POST /api/users/profile/image
+// @access  Private
+export const updateProfileImage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) {
+      return next(ApiError.badRequest("No image file uploaded"))
+    }
+
+    // Create URL for the uploaded file
+    const baseUrl = `${req.protocol}://${req.get("host")}`
+    const fileUrl = `${baseUrl}/uploads/profile-images/${req.file.filename}`
+
+    // Get current user
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { imageUrl: true },
+    })
+
+    // Delete old image file if it exists
+    if (user?.imageUrl) {
+      try {
+        const oldImagePath = new URL(user.imageUrl).pathname
+        const fullPath = path.join(process.cwd(), oldImagePath)
+
+        // Check if file exists before attempting to delete
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath)
+          console.log(`Deleted old profile image: ${fullPath}`)
+        }
+      } catch (error) {
+        console.error("Error deleting old image:", error)
+        // Continue even if old image deletion fails
+      }
+    }
+
+    // Update user with new image URL
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { imageUrl: fileUrl },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        tel: true,
+        address: true,
+        role: true,
+        imageUrl: true,
+      },
+    })
+
+    res.json({
+      message: "Profile image updated successfully",
+      user: updatedUser,
+    })
   } catch (error) {
     next(error)
   }

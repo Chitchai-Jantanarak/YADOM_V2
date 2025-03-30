@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { authService, ROLES } from "../services/authService"
 
@@ -15,10 +15,23 @@ const withAuthProtection = (Component, { requireAuth = false, redirectAuthentica
   const AuthProtectedComponent = (props) => {
     const navigate = useNavigate()
     const location = useLocation()
+    const [authChecked, setAuthChecked] = useState(false)
 
     useEffect(() => {
+      // Get a fresh check of authentication status
       const isAuthenticated = authService.isAuthenticated()
       const currentUser = authService.getCurrentUser()
+
+      // Check for a recent logout flag in sessionStorage
+      const recentlyLoggedOut = sessionStorage.getItem("recentlyLoggedOut") === "true"
+
+      // If user just logged out, allow them to see login/register pages
+      if (recentlyLoggedOut && redirectAuthenticated) {
+        // Clear the flag after using it
+        sessionStorage.removeItem("recentlyLoggedOut")
+        setAuthChecked(true)
+        return
+      }
 
       // Case 1: Require authentication (protected routes)
       if (requireAuth && !isAuthenticated) {
@@ -50,7 +63,14 @@ const withAuthProtection = (Component, { requireAuth = false, redirectAuthentica
         navigate(redirectPath, { replace: true })
         return
       }
+
+      setAuthChecked(true)
     }, [navigate, location])
+
+    // Don't render anything until auth check is complete
+    if (!authChecked && (requireAuth || redirectAuthenticated)) {
+      return null // Or a loading spinner
+    }
 
     return <Component {...props} />
   }

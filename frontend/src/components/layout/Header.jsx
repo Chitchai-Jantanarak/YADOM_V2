@@ -48,10 +48,7 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="p-2 rounded-full hover:bg-gray-100 relative">
-            <Bell className="h-6 w-6 text-gray-600" />
-            <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-          </button>
+
           <div className="h-6 border-l border-gray-300 mx-2 hidden md:block"></div>
 
           <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 hover:text-red-700">

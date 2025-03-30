@@ -1,11 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { authService, ROLES } from "../services/authService"
 import Logo from "../components/ui/Logo"
 import PageTransition from "../components/layout/PageTransition"
-
 import withAuthProtection from "../hoc/withAuthProtection"
 
 const Login = () => {
@@ -17,6 +16,13 @@ const Login = () => {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+
+  // Clear the recently logged out flag when component unmounts
+  useEffect(() => {
+    return () => {
+      sessionStorage.removeItem("recentlyLoggedOut")
+    }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target

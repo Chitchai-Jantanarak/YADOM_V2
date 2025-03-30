@@ -1,13 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { authService } from "../services/authService"
 import PageTransition from "../components/layout/PageTransition"
 import Logo from "../components/ui/Logo"
-import Door from "../components/ui/Door"
 import { countryCodes } from "../utils/CountryCode"
-
 import withAuthProtection from "../hoc/withAuthProtection"
 
 const Register = () => {
@@ -23,6 +21,13 @@ const Register = () => {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+
+  // Clear the recently logged out flag when component unmounts
+  useEffect(() => {
+    return () => {
+      sessionStorage.removeItem("recentlyLoggedOut")
+    }
+  }, [])
 
   const handleCountryChange = (e) => {
     setSelectedCountry(e.target.value)
@@ -202,9 +207,8 @@ const Register = () => {
                     {loading ? "Signing up..." : "Sign Up"}
                   </button>
 
-                  <Link className="flex flex-row space-x-2" to={"/Login"}>
-                    <p> Login </p>
-                    <Door />
+                  <Link to={"/Login"}>
+                  <button className="btn btn-outline">Log in</button>
                   </Link>
                 </div>
               </form>
