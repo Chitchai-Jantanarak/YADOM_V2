@@ -5,11 +5,9 @@ import { motion } from "framer-motion"
 import { format, subDays, subMonths, subQuarters, subYears, isValid } from "date-fns"
 import {
   DollarSign,
-  PieChart,
   Download,
   FileText,
   FileSpreadsheet,
-  FileIcon as FilePdf,
   ChevronDown,
   Users,
   ShoppingBag,
@@ -17,10 +15,13 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react"
+
+// Import services
 import { getAllOrders } from "../../services/orderService"
 import { getAllUsers } from "../../services/userService"
 import { getProducts } from "../../services/productService"
 import { getAromas } from "../../services/aromaService"
+import { getDashboardStats } from "../../services/dashboardService"
 import { ROLES } from "../../services/authService"
 import ProtectedRoute from "../../utils/ProtectedRoute"
 
@@ -31,8 +32,6 @@ import ReactApexChart from "react-apexcharts"
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   LineChart,
   Line,
   XAxis,
@@ -41,436 +40,22 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
   Pie,
   Cell,
 } from "recharts"
 
-// Export utilities
-import {
-  exportToCSV,
-  exportToPDF,
-  exportDashboardAsPDF,
-  prepareAnalyticsDataForExport,
-  exportToExcelCSV,
-} from "../../utils/exportUtils"
+// Export utilities - removed PDF exports
+import { exportToCSV, prepareAnalyticsDataForExport, exportToExcelCSV } from "../../utils/exportUtils"
 
-// Add these imports at the top of the file
-// import { Download, FileText, FileSpreadsheet, FileIcon as FilePdf, ChevronDown } from 'lucide-react'
-// import { exportToCSV, exportToPDF, prepareAnalyticsDataForExport } from "../utils/exportUtils"
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
-
-const data = [
-  { name: "Jan", uv: 400, pv: 2400, amt: 2400 },
-  { name: "Feb", uv: 300, pv: 1398, amt: 2210 },
-  { name: "Mar", uv: 200, pv: 9800, amt: 2290 },
-  { name: "Apr", uv: 278, pv: 3908, amt: 2000 },
-  { name: "May", uv: 189, pv: 4800, amt: 2181 },
-  { name: "Jun", uv: 239, pv: 3800, amt: 2500 },
-  { name: "Jul", uv: 349, pv: 4300, amt: 2100 },
-]
-
-const pieData = [
-  { name: "Group A", value: 400 },
-  { name: "Group B", value: 300 },
-  { name: "Group C", value: 300 },
-  { name: "Group D", value: 200 },
-]
-
-const last7Days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i))
-const last30Days = Array.from({ length: 30 }, (_, i) => subDays(new Date(), i))
-const last90Days = Array.from({ length: 90 }, (_, i) => subDays(new Date(), i))
-const last6Months = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), i))
-const last12Months = Array.from({ length: 12 }, (_, i) => subMonths(new Date(), i))
-const last2Years = Array.from({ length: 24 }, (_, i) => subMonths(new Date(), i))
-const last5Years = Array.from({ length: 5 }, (_, i) => subYears(new Date(), i))
-
-// Import faker
-import { faker } from "@faker-js/faker"
-
-const generateChartData = (dates) => {
-  return dates.map((date) => ({
-    date: date.toISOString().split("T")[0],
-    value: faker.number.int({ min: 100, max: 1000 }),
-  }))
-}
-
-const areaChartData = generateChartData(last30Days)
-const barChartData = generateChartData(last7Days)
-const lineChartData = generateChartData(last12Months)
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ")
-}
-
-const GradientAreaChart = () => {
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <AreaChart data={areaChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <XAxis dataKey="date" />
-        <YAxis />
-        <CartesianGrid strokeDasharray="3 3" />
-        <Tooltip />
-        <Area type="monotone" dataKey="value" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
-      </AreaChart>
-    </ResponsiveContainer>
-  )
-}
-
-const SimpleBarChart = () => {
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={barChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="value" fill="#8884d8" />
-      </BarChart>
-    </ResponsiveContainer>
-  )
-}
-
-const SimplePieChart = () => {
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <PieChart>
-        <Pie
-          dataKey="value"
-          isAnimationActive={false}
-          data={pieData}
-          cx="50%"
-          cy="50%"
-          outerRadius={80}
-          fill="#8884d8"
-          label
-        >
-          {pieData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip />
-      </PieChart>
-    </ResponsiveContainer>
-  )
-}
-
-const SimpleLineChart = () => {
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={lineChartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
-      </LineChart>
-    </ResponsiveContainer>
-  )
-}
-
-// export function DashboardAnalytics() {
-//   const [timeRange, setTimeRange] = useState("month")
-//   const [analyticsData, setAnalyticsData] = useState(null)
-
-//   useEffect(() => {
-//     // Simulate fetching analytics data based on timeRange
-//     const fetchData = () => {
-//       const now = new Date()
-//       let startDate
-
-//       switch (timeRange) {
-//         case "month":
-//           startDate = subMonths(now, 1)
-//           break
-//         case "quarter":
-//           startDate = subQuarters(now, 1)
-//           break
-//         case "half-year":
-//           startDate = subMonths(now, 6)
-//           break
-//         case "year":
-//           startDate = subYears(now, 1)
-//           break
-//         default:
-//           startDate = subMonths(now, 1)
-//       }
-
-//       const numberOfDataPoints = 30 // Example number of data points
-//       const salesData = Array.from({ length: numberOfDataPoints }, (_, i) => {
-//         const date = subDays(now, i)
-//         return {
-//           date: date.toISOString().split("T")[0],
-//           sales: faker.number.int({ min: 50, max: 200 }),
-//           revenue: faker.number.int({ min: 5000, max: 15000 }),
-//         }
-//       }).reverse()
-
-//       const summary = [
-//         { metric: "Total Sales", value: salesData.reduce((acc, curr) => acc + curr.sales, 0) },
-//         { metric: "Total Revenue", value: salesData.reduce((acc, curr) => acc + curr.revenue, 0) },
-//         {
-//           metric: "Average Order Value",
-//           value: salesData.reduce((acc, curr) => acc + curr.revenue, 0) / salesData.length,
-//         },
-//       ]
-
-//       // Simulate aroma popularity data
-//       const aromaData = [
-//         { aroma: "Lavender", orders: faker.number.int({ min: 10, max: 50 }) },
-//         { aroma: "Rose", orders: faker.number.int({ min: 10, max: 50 }) },
-//         { aroma: "Sandalwood", orders: faker.number.int({ min: 10, max: 50 }) },
-//       ]
-
-//       setAnalyticsData({ summary, salesData, aromaData })
-//     }
-
-//     fetchData()
-//   }, [timeRange])
-
-//   // Add this function inside the DashboardAnalytics component, before the return statement
-//   const handleExport = (format) => {
-//     if (!analyticsData) return
-
-//     const exportData = prepareAnalyticsDataForExport(analyticsData, timeRange)
-//     const timeRangeText =
-//       timeRange === "month"
-//         ? "Monthly"
-//         : timeRange === "quarter"
-//           ? "Quarterly"
-//           : timeRange === "half-year"
-//             ? "Half_Yearly"
-//             : "Yearly"
-
-//     const filename = `Yadomm_Analytics_${timeRangeText}`
-
-//     switch (format) {
-//       case "csv":
-//         // Export summary
-//         exportToCSV(exportData.summary, `${filename}_Summary`)
-//         // Export sales data
-//         exportToCSV(exportData.salesData, `${filename}_Sales`)
-//         // Export aroma data if available
-//         if (exportData.aromaData.length > 0) {
-//           exportToCSV(exportData.aromaData, `${filename}_Aroma_Popularity`)
-//         }
-//         break
-//       case "excel":
-//         // Create a single Excel file with multiple sheets
-//         const wb = XLSX.utils.book_new()
-
-//         // Add summary sheet
-//         const summarySheet = XLSX.utils.json_to_sheet(exportData.summary)
-//         XLSX.utils.book_append_sheet(wb, summarySheet, "Summary")
-
-//         // Add sales data sheet
-//         const salesSheet = XLSX.utils.json_to_sheet(exportData.salesData)
-//         XLSX.utils.book_append_sheet(wb, salesSheet, "Sales Data")
-
-//         // Add aroma data sheet if available
-//         if (exportData.aromaData.length > 0) {
-//           const aromaSheet = XLSX.utils.json_to_sheet(exportData.aromaData)
-//           XLSX.utils.book_append_sheet(wb, aromaSheet, "Aroma Popularity")
-//         }
-
-//         // Generate Excel file and trigger download
-//         XLSX.writeFile(wb, `${filename}.xlsx`)
-//         break
-//       case "pdf":
-//         // Export to PDF
-//         exportToPDF(exportData.summary, `${filename}`, `Yadomm Analytics Report - ${timeRangeText}`)
-//         break
-//       default:
-//         break
-//     }
-//   }
-
-//   // Add this useEffect to handle clicking outside the dropdown to close it
-//   // Add this after the other useEffect hooks
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       const dropdown = document.getElementById("export-dropdown")
-//       if (dropdown && !dropdown.contains(event.target) && !event.target.closest('button[id^="export"]')) {
-//         dropdown.classList.add("hidden")
-//       }
-//     }
-
-//     document.addEventListener("mousedown", handleClickOutside)
-//     return () => {
-//       document.removeEventListener("mousedown", handleClickOutside)
-//     }
-//   }, [])
-
-//   return (
-//     <div className="mt-4 mx-4">
-//       <AnalyticsContent
-//         timeRange={timeRange}
-//         setTimeRange={setTimeRange}
-//         analyticsData={analyticsData}
-//         handleExport={handleExport}
-//       />
-//     </div>
-//   )
-// }
-
-// function AnalyticsContent({ timeRange, setTimeRange, analyticsData, handleExport }) {
-//   return (
-//     <Card>
-//       {/* Replace the <div className="flex justify-between items-center mb-6"> in the AnalyticsContent component with: */}
-//       <div className="flex justify-between items-center mb-6">
-//         <h2 className="text-2xl font-semibold">Analyst Static</h2>
-
-//         <div className="flex items-center gap-4">
-//           <div className="flex items-center gap-2">
-//             <span className="text-gray-500">Time Range:</span>
-//             <select
-//               className="border rounded-md px-3 py-1 appearance-none bg-white"
-//               value={timeRange}
-//               onChange={(e) => setTimeRange(e.target.value)}
-//             >
-//               <option value="month">Last Month</option>
-//               <option value="quarter">Last Quarter</option>
-//               <option value="half-year">Last 6 Months</option>
-//               <option value="year">Last Year</option>
-//             </select>
-//           </div>
-
-//           <div className="relative group">
-//             <button
-//               className="flex items-center gap-2 bg-blue-500 text-white px-3 py-1.5 rounded-md text-sm"
-//               onClick={() => document.getElementById("export-dropdown").classList.toggle("hidden")}
-//             >
-//               <Download size={16} />
-//               Export
-//               <ChevronDown size={14} />
-//             </button>
-
-//             <div
-//               id="export-dropdown"
-//               className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 hidden border"
-//             >
-//               <ul className="py-1">
-//                 <li>
-//                   <button
-//                     onClick={() => handleExport("csv")}
-//                     className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-//                   >
-//                     <FileText size={16} />
-//                     Export as CSV
-//                   </button>
-//                 </li>
-//                 <li>
-//                   <button
-//                     onClick={() => handleExport("excel")}
-//                     className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-//                   >
-//                     <FileSpreadsheet size={16} />
-//                     Export as Excel
-//                   </button>
-//                 </li>
-//                 <li>
-//                   <button
-//                     onClick={() => handleExport("pdf")}
-//                     className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-//                   >
-//                     <FilePdf size={16} />
-//                     Export as PDF
-//                   </button>
-//                 </li>
-//               </ul>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-//         <Card className="p-4">
-//           <Typography variant="h6" color="blue-gray" className="mb-2">
-//             Total Sales
-//           </Typography>
-//           <Typography variant="h4" className="font-bold">
-//             {analyticsData ? analyticsData.summary[0].value : "Loading..."}
-//           </Typography>
-//           <div className="flex items-center mt-2">
-//             <ArrowUpIcon className="h-5 w-5 text-green-500" />
-//             <Typography variant="small" color="green" className="font-semibold ml-1">
-//               5%
-//             </Typography>
-//             <Typography variant="small" color="gray" className="ml-1">
-//               than last month
-//             </Typography>
-//           </div>
-//         </Card>
-//         <Card className="p-4">
-//           <Typography variant="h6" color="blue-gray" className="mb-2">
-//             Total Revenue
-//           </Typography>
-//           <Typography variant="h4" className="font-bold">
-//             ${analyticsData ? analyticsData.summary[1].value : "Loading..."}
-//           </Typography>
-//           <div className="flex items-center mt-2">
-//             <ArrowDownIcon className="h-5 w-5 text-red-500" />
-//             <Typography variant="small" color="red" className="font-semibold ml-1">
-//               2%
-//             </Typography>
-//             <Typography variant="small" color="gray" className="ml-1">
-//               than last month
-//             </Typography>
-//           </div>
-//         </Card>
-//         <Card className="p-4">
-//           <Typography variant="h6" color="blue-gray" className="mb-2">
-//             Average Order Value
-//           </Typography>
-//           <Typography variant="h4" className="font-bold">
-//             ${analyticsData ? analyticsData.summary[2].value.toFixed(2) : "Loading..."}
-//           </Typography>
-//           <div className="flex items-center mt-2">
-//             <ArrowUpIcon className="h-5 w-5 text-green-500" />
-//             <Typography variant="small" color="green" className="font-semibold ml-1">
-//               8%
-//             </Typography>
-//             <Typography variant="small" color="gray" className="ml-1">
-//               than last month
-//             </Typography>
-//           </div>
-//         </Card>
-//       </div>
-
-//       <Typography variant="h5" color="blue-gray" className="mb-4">
-//         Sales Performance
-//       </Typography>
-//       <GradientAreaChart />
-
-//       <Typography variant="h5" color="blue-gray" className="mt-8 mb-4">
-//         Regional Sales Distribution
-//       </Typography>
-//       <SimplePieChart />
-
-//       <Typography variant="h5" color="blue-gray" className="mt-8 mb-4">
-//         Daily Sales
-//       </Typography>
-//       <SimpleBarChart />
-
-//       <Typography variant="h5" color="blue-gray" className="mt-8 mb-4">
-//         Monthly Revenue Trend
-//       </Typography>
-//       <SimpleLineChart />
-//     </Card>
-//   )
-// }
-
+/**
+ * DashboardAnalytics Component
+ *
+ * This component displays analytics data for the Yadomm dashboard.
+ * It fetches data from multiple services and processes it based on the selected time range.
+ *
+ * @returns {JSX.Element} The rendered dashboard analytics component
+ */
 const DashboardAnalytics = () => {
   // Refs
   const dashboardRef = useRef(null)
@@ -481,6 +66,7 @@ const DashboardAnalytics = () => {
   const [users, setUsers] = useState([])
   const [products, setProducts] = useState([])
   const [aromas, setAromas] = useState([])
+  const [dashboardStats, setDashboardStats] = useState(null)
 
   // State for UI
   const [loading, setLoading] = useState(true)
@@ -492,25 +78,30 @@ const DashboardAnalytics = () => {
   // State for processed analytics data
   const [analyticsData, setAnalyticsData] = useState(null)
 
-  // Fetch all required data
+  /**
+   * Fetches all required data from the API
+   * Uses Promise.all to fetch data in parallel for better performance
+   */
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true)
 
         // Fetch all data in parallel
-        const [ordersData, usersData, productsData, aromasData] = await Promise.all([
+        const [ordersData, usersData, productsData, aromasData, statsData] = await Promise.all([
           getAllOrders(),
           getAllUsers(),
           getProducts(),
           getAromas(),
+          getDashboardStats(),
         ])
 
         // Set raw data
         setOrders(Array.isArray(ordersData) ? ordersData : ordersData?.orders || [])
-        setUsers(usersData || [])
+        setUsers(Array.isArray(usersData) ? usersData : usersData?.users || [])
         setProducts(Array.isArray(productsData) ? productsData : productsData?.products || [])
         setAromas(Array.isArray(aromasData) ? aromasData : aromasData?.aromas || [])
+        setDashboardStats(statsData || null)
 
         setError(null)
       } catch (err) {
@@ -524,14 +115,20 @@ const DashboardAnalytics = () => {
     fetchAllData()
   }, [])
 
-  // Process data when raw data or time range changes
+  /**
+   * Process data when raw data or time range changes
+   * This effect is triggered whenever the raw data or time range changes
+   */
   useEffect(() => {
     if (orders.length && users.length && products.length) {
       processAnalyticsData()
     }
-  }, [orders, users, products, aromas, timeRange])
+  }, [orders, users, products, aromas, timeRange, dashboardStats])
 
-  // Handle click outside dropdown
+  /**
+   * Handle click outside dropdown
+   * Closes the export dropdown when clicking outside
+   */
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -549,7 +146,10 @@ const DashboardAnalytics = () => {
     }
   }, [])
 
-  // Process raw data into analytics data based on selected time range
+  /**
+   * Process raw data into analytics data based on selected time range
+   * This function transforms the raw API data into the format needed for charts and displays
+   */
   const processAnalyticsData = () => {
     // Get date range based on selected time period
     const now = new Date()
@@ -582,8 +182,8 @@ const DashboardAnalytics = () => {
     const totalRevenue = filteredOrders.reduce((sum, order) => {
       // Calculate order total based on cart items
       const orderTotal = order.cartItems
-        ? order.cartItems.reduce((itemSum, item) => itemSum + item.price * item.quantity, 0)
-        : 0
+        ? order.cartItems.reduce((itemSum, item) => itemSum + (item.price || 0) * (item.quantity || 1), 0)
+        : order.totalAmount || 0 // Fallback to totalAmount if available
       return sum + orderTotal
     }, 0)
 
@@ -604,12 +204,9 @@ const DashboardAnalytics = () => {
 
     // Generate sales data by day/week/month based on time range
     let salesData = []
-    let dateFormat = {}
 
     if (timeRange === "month") {
       // Daily data for the last month
-      dateFormat = { day: "2-digit" }
-
       // Create a map for each day in the last month
       const daysMap = new Map()
       for (let i = 0; i < 30; i++) {
@@ -627,8 +224,8 @@ const DashboardAnalytics = () => {
           if (daysMap.has(dayKey)) {
             const dayData = daysMap.get(dayKey)
             const orderTotal = order.cartItems
-              ? order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-              : 0
+              ? order.cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+              : order.totalAmount || 0
             dayData.value += orderTotal
           }
         }
@@ -656,8 +253,8 @@ const DashboardAnalytics = () => {
             if (weeksMap.has(weekKey)) {
               const weekData = weeksMap.get(weekKey)
               const orderTotal = order.cartItems
-                ? order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-                : 0
+                ? order.cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+                : order.totalAmount || 0
               weekData.value += orderTotal
             }
           }
@@ -684,8 +281,8 @@ const DashboardAnalytics = () => {
           if (monthsMap.has(monthKey)) {
             const monthData = monthsMap.get(monthKey)
             const orderTotal = order.cartItems
-              ? order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-              : 0
+              ? order.cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+              : order.totalAmount || 0
             monthData.value += orderTotal
           }
         }
@@ -714,8 +311,8 @@ const DashboardAnalytics = () => {
           if (daysMap.has(dayKey)) {
             const dayData = daysMap.get(dayKey)
             const orderTotal = order.cartItems
-              ? order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-              : 0
+              ? order.cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+              : order.totalAmount || 0
             dayData.y += orderTotal
           }
         }
@@ -750,8 +347,8 @@ const DashboardAnalytics = () => {
           if (monthsMap.has(monthKey)) {
             const monthData = monthsMap.get(monthKey)
             const orderTotal = order.cartItems
-              ? order.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-              : 0
+              ? order.cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+              : order.totalAmount || 0
             monthData.y += orderTotal
           }
         }
@@ -793,8 +390,8 @@ const DashboardAnalytics = () => {
 
     const previousPeriodRevenue = previousPeriodOrders.reduce((sum, order) => {
       const orderTotal = order.cartItems
-        ? order.cartItems.reduce((itemSum, item) => itemSum + item.price * item.quantity, 0)
-        : 0
+        ? order.cartItems.reduce((itemSum, item) => itemSum + (item.price || 0) * (item.quantity || 1), 0)
+        : order.totalAmount || 0
       return sum + orderTotal
     }, 0)
 
@@ -824,7 +421,7 @@ const DashboardAnalytics = () => {
           order.cartItems.forEach((item) => {
             if (item.aromaId && aromaCountMap.has(item.aromaId)) {
               const aromaData = aromaCountMap.get(item.aromaId)
-              aromaData.count += item.quantity
+              aromaData.count += item.quantity || 1
             }
           })
         }
@@ -882,8 +479,8 @@ const DashboardAnalytics = () => {
           order.cartItems.forEach((item) => {
             if (item.productId && productCountMap.has(item.productId)) {
               const productData = productCountMap.get(item.productId)
-              productData.count += item.quantity
-              productData.revenue += item.price * item.quantity
+              productData.count += item.quantity || 1
+              productData.revenue += (item.price || 0) * (item.quantity || 1)
             }
           })
         }
@@ -912,10 +509,16 @@ const DashboardAnalytics = () => {
       dailyOrderCounts,
       productStats,
       averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      // Include dashboard stats if available
+      ...(dashboardStats || {}),
     })
   }
 
-  // Format currency
+  /**
+   * Format currency with Thai Baht (THB)
+   * @param {number} value - The value to format
+   * @returns {string} Formatted currency string
+   */
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("th-TH", {
       style: "currency",
@@ -927,7 +530,10 @@ const DashboardAnalytics = () => {
       .replace("฿", "THB")
   }
 
-  // Prepare order status data for pie chart
+  /**
+   * Prepare order status data for pie chart
+   * @returns {Array} Array of objects with order status data
+   */
   const getOrderStatusData = () => {
     if (!analyticsData || !analyticsData.orderStats) return []
 
@@ -975,7 +581,10 @@ const DashboardAnalytics = () => {
     ]
   }
 
-  // Get time range label
+  /**
+   * Get time range label for display and export
+   * @returns {string} Formatted time range label
+   */
   const getTimeRangeLabel = () => {
     switch (timeRange) {
       case "month":
@@ -991,7 +600,10 @@ const DashboardAnalytics = () => {
     }
   }
 
-  // Handle export
+  /**
+   * Handle export of analytics data in different formats
+   * @param {string} format - The export format (csv, excel)
+   */
   const handleExport = (format) => {
     if (!analyticsData) return
 
@@ -1009,6 +621,10 @@ const DashboardAnalytics = () => {
         if (exportData.aromaData.length > 0) {
           exportToCSV(exportData.aromaData, `${filename}_Aroma_Popularity`)
         }
+        // Export product data if available
+        if (exportData.productData.length > 0) {
+          exportToCSV(exportData.productData, `${filename}_Product_Performance`)
+        }
         break
       case "excel":
         // Use our safer alternative to xlsx
@@ -1022,22 +638,22 @@ const DashboardAnalytics = () => {
           sheets.push({ name: "Aroma_Popularity", data: exportData.aromaData })
         }
 
+        // Add product data sheet if available
+        if (exportData.productData.length > 0) {
+          sheets.push({ name: "Product_Performance", data: exportData.productData })
+        }
+
         exportToExcelCSV(sheets, filename)
-        break
-      case "pdf":
-        // Export to PDF
-        exportToPDF(exportData.summary, `${filename}`, `Yadomm Analytics Report - ${timeRangeText}`)
-        break
-      case "dashboard":
-        // Export entire dashboard as PDF
-        exportDashboardAsPDF(dashboardRef, `${filename}_Dashboard`)
         break
       default:
         break
     }
   }
 
-  // ApexCharts options for revenue trend
+  /**
+   * Get ApexCharts options for revenue trend chart
+   * @returns {Object} ApexCharts configuration options
+   */
   const getApexOptions = () => {
     return {
       chart: {
@@ -1093,8 +709,12 @@ const DashboardAnalytics = () => {
     }
   }
 
+  /**
+   * AnalyticsContent component renders the main dashboard content
+   * @returns {JSX.Element} The rendered analytics content
+   */
   const AnalyticsContent = () => (
-    <div className="w-full md:pl-72" ref={dashboardRef}>
+    <div className="w-full md:pl-72 pt-32" ref={dashboardRef}>
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
@@ -1158,30 +778,6 @@ const DashboardAnalytics = () => {
                         Export as CSV for Excel
                       </button>
                     </li>
-                    <li>
-                      <button
-                        onClick={() => {
-                          handleExport("pdf")
-                          setExportDropdownOpen(false)
-                        }}
-                        className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <FilePdf size={16} />
-                        Export Summary as PDF
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => {
-                          handleExport("dashboard")
-                          setExportDropdownOpen(false)
-                        }}
-                        className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <FilePdf size={16} />
-                        Export Dashboard as PDF
-                      </button>
-                    </li>
                   </ul>
                 </motion.div>
               )}
@@ -1189,6 +785,8 @@ const DashboardAnalytics = () => {
           </div>
         </div>
 
+        {/* Rest of the component remains unchanged */}
+        {/* ... */}
         {/* Tabs */}
         <div className="mb-6">
           <div className="border-b border-gray-200">
@@ -1655,6 +1253,46 @@ const DashboardAnalytics = () => {
                       </div>
                     )}
                   />
+                )}
+              </div>
+            </motion.div>
+
+            {/* Product Revenue Distribution */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="bg-white rounded-lg p-6 shadow"
+            >
+              <h2 className="text-lg font-semibold mb-6">Product Revenue Distribution</h2>
+              <div className="h-80">
+                {!loading && analyticsData && analyticsData.productStats && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip
+                        formatter={(value) => formatCurrency(value)}
+                        labelFormatter={(name) => `Product: ${name}`}
+                      />
+                      <Legend />
+                      <Pie
+                        data={analyticsData.productStats.slice(0, 5).map((product) => ({
+                          name: product.name,
+                          value: product.revenue,
+                        }))}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {analyticsData.productStats.slice(0, 5).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={`hsl(${index * 45 + 120}, 70%, 50%)`} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
                 )}
               </div>
             </motion.div>

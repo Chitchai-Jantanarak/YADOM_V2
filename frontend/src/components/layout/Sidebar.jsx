@@ -21,6 +21,12 @@ export const Sidebar = () => {
       path: "/dashboard/main",
       roles: [ROLES.ADMIN, ROLES.OWNER],
     },
+        {
+      title: "Analytics",
+      icon: BarChart2,
+      path: "/dashboard/analytics",
+      roles: [ROLES.OWNER], // Only owners can access analytics
+    },
     {
       title: "Products",
       icon: Package,
@@ -38,24 +44,6 @@ export const Sidebar = () => {
       icon: Users,
       path: "/dashboard/customers",
       roles: [ROLES.ADMIN, ROLES.OWNER],
-    },
-    {
-      title: "Reports",
-      icon: FileText,
-      path: "/dashboard/reports",
-      roles: [ROLES.OWNER], // Only owners can access reports
-    },
-    {
-      title: "Analytics",
-      icon: BarChart2,
-      path: "/dashboard/analytics",
-      roles: [ROLES.OWNER], // Only owners can access analytics
-    },
-    {
-      title: "Sales Insights",
-      icon: PieChart,
-      path: "/dashboard/insights",
-      roles: [ROLES.OWNER], // Only owners can access sales insights
     },
     {
       title: "Settings",

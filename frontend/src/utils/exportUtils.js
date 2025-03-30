@@ -109,36 +109,78 @@ export const exportToExcelCSV = (sheets, filename = "export") => {
 
 // Export data to PDF
 export const exportToPDF = (data, filename = "export", title = "Export Data") => {
-  // Create new PDF document
-  const doc = new jsPDF("p", "mm", "a4")
+  try {
+    // Create new PDF document
+    const doc = new jsPDF("p", "mm", "a4")
 
-  // Add title
-  doc.setFontSize(18)
-  doc.text(title, 14, 22)
-  doc.setFontSize(11)
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30)
+    // Add title
+    doc.setFontSize(18)
+    doc.text(title, 14, 22)
+    doc.setFontSize(11)
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30)
 
-  // Get headers and format data for autoTable
-  const headers = Object.keys(data[0])
-  const rows = data.map((item) =>
-    headers.map((header) => {
-      const value = item[header]
-      return typeof value === "object" && value !== null ? JSON.stringify(value) : value
-    }),
-  )
+    // Get headers and format data for autoTable
+    const headers = Object.keys(data[0])
+    const rows = data.map((item) =>
+      headers.map((header) => {
+        const value = item[header]
+        return typeof value === "object" && value !== null ? JSON.stringify(value) : value
+      }),
+    )
 
-  // Add table to PDF
-  doc.autoTable({
-    head: [headers],
-    body: rows,
-    startY: 40,
-    margin: { top: 40 },
-    styles: { overflow: "linebreak" },
-    headStyles: { fillColor: [41, 128, 185] },
-  })
+    // Manually create a table since autoTable might not be working
+    const startY = 40
+    const cellPadding = 3
+    const cellWidth = 40
+    const cellHeight = 10
+    const pageWidth = doc.internal.pageSize.width
+    const columnsPerPage = Math.floor((pageWidth - 20) / cellWidth)
 
-  // Save PDF
-  doc.save(`${filename}_${getFormattedDate()}.pdf`)
+    // Draw header
+    doc.setFillColor(41, 128, 185)
+    doc.setTextColor(255, 255, 255)
+    doc.setFontStyle("bold")
+
+    for (let i = 0; i < Math.min(headers.length, columnsPerPage); i++) {
+      doc.rect(10 + i * cellWidth, startY, cellWidth, cellHeight, "F")
+      doc.text(
+        headers[i].toString().substring(0, 15),
+        10 + i * cellWidth + cellPadding,
+        startY + cellHeight - cellPadding,
+      )
+    }
+
+    // Draw rows
+    doc.setFillColor(255, 255, 255)
+    doc.setTextColor(0, 0, 0)
+    doc.setFontStyle("normal")
+
+    let currentY = startY + cellHeight
+
+    for (let i = 0; i < rows.length; i++) {
+      // Check if we need a new page
+      if (currentY > doc.internal.pageSize.height - 20) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      for (let j = 0; j < Math.min(rows[i].length, columnsPerPage); j++) {
+        const value = rows[i][j]
+        const displayValue = value !== null && value !== undefined ? value.toString().substring(0, 15) : ""
+
+        doc.rect(10 + j * cellWidth, currentY, cellWidth, cellHeight)
+        doc.text(displayValue, 10 + j * cellWidth + cellPadding, currentY + cellHeight - cellPadding)
+      }
+
+      currentY += cellHeight
+    }
+
+    // Save PDF
+    doc.save(`${filename}_${getFormattedDate()}.pdf`)
+  } catch (error) {
+    console.error("Error generating PDF:", error)
+    alert("Failed to generate PDF. Please try again.")
+  }
 }
 
 // Export entire dashboard as PDF
@@ -159,7 +201,6 @@ export const exportDashboardAsPDF = async (dashboardRef, filename = "dashboard")
     // Calculate dimensions to maintain aspect ratio
     const originalWidth = element.offsetWidth
     const originalHeight = element.offsetHeight
-    const aspectRatio = originalHeight / originalWidth
 
     // A4 dimensions in pixels at 96 DPI
     const a4Width = 794 // ~210mm at 96 DPI
@@ -168,27 +209,36 @@ export const exportDashboardAsPDF = async (dashboardRef, filename = "dashboard")
     // Calculate scale to fit content on A4
     const scale = Math.min(a4Width / originalWidth, a4Height / originalHeight) * 0.9
 
-    // Create canvas from the element
+    // Create canvas from the element with modified options to avoid color parsing issues
     const canvas = await html2canvas(element, {
       scale: scale,
       useCORS: true,
       logging: false,
       allowTaint: true,
       backgroundColor: "#ffffff",
+      onclone: (document) => {
+        // Find and modify elements with oklch colors to use standard RGB
+        const elementsWithStyle = document.querySelectorAll('[style*="oklch"]')
+        elementsWithStyle.forEach((el) => {
+          // Replace oklch colors with a standard color
+          el.style.color = "#000000"
+          el.style.backgroundColor = "#ffffff"
+        })
+      },
     })
-
-    // Calculate dimensions for PDF
-    const imgWidth = 210 // A4 width in mm
-    const imgHeight = (imgWidth * canvas.height) / canvas.width
 
     // Create PDF
     const pdf = new jsPDF("p", "mm", "a4")
 
     // Add title
     pdf.setFontSize(16)
-    pdf.text("Yadomm Analytics Dashboard", 105, 15, { align: "center" })
+    pdf.text("Analytics Dashboard", 105, 15, { align: "center" })
     pdf.setFontSize(10)
     pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" })
+
+    // Calculate dimensions for PDF
+    const imgWidth = 210 // A4 width in mm
+    const imgHeight = (imgWidth * canvas.height) / canvas.width
 
     // Add canvas as image
     const imgData = canvas.toDataURL("image/png")
@@ -229,9 +279,9 @@ export const exportDashboardAsPDF = async (dashboardRef, filename = "dashboard")
 
 // Prepare analytics data for export
 export const prepareAnalyticsDataForExport = (analyticsData, timeRange) => {
-  if (!analyticsData) return { summary: [], salesData: [], aromaData: [] }
+  if (!analyticsData) return { summary: [], salesData: [], aromaData: [], productData: [] }
 
-  const { totalRevenue, orderStats, newUsers, salesData, totalOrders, aromaStats, revenueTrendData } = analyticsData
+  const { totalRevenue, orderStats, newUsers, salesData, totalOrders, aromaStats, productStats } = analyticsData
 
   // Prepare summary data
   const summaryData = [
@@ -254,6 +304,7 @@ export const prepareAnalyticsDataForExport = (analyticsData, timeRange) => {
     { category: "Waiting Orders", value: orderStats?.waiting || 0 },
     { category: "Confirmed Orders", value: orderStats?.confirmed || 0 },
     { category: "Canceled Orders", value: orderStats?.canceled || 0 },
+    { category: "Average Order Value", value: totalOrders > 0 ? totalRevenue / totalOrders : 0 },
   ]
 
   // Prepare sales data
@@ -272,10 +323,20 @@ export const prepareAnalyticsDataForExport = (analyticsData, timeRange) => {
       }))
     : []
 
+  // Prepare product data
+  const formattedProductData = productStats
+    ? productStats.map((product) => ({
+        name: product.name || "",
+        count: product.count || 0,
+        revenue: product.revenue || 0,
+      }))
+    : []
+
   return {
     summary: summaryData,
     salesData: formattedSalesData,
     aromaData: formattedAromaData,
+    productData: formattedProductData,
   }
 }
 

@@ -9,4 +9,3 @@ export const getDashboardStats = async () => {
     throw new Error(error.response?.data?.message || "Failed to fetch dashboard statistics")
   }
 }
-
