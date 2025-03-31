@@ -46,6 +46,17 @@ const ProductView = () => {
         const transformedProduct = transformProduct(data)
         setProduct(transformedProduct)
 
+        // Check if product is MAIN_PRODUCT type and redirect to forbidden page
+        if (transformedProduct.type === "MAIN_PRODUCT") {
+          navigate(`/forbidden/main-product/${id}`, {
+            state: {
+              productName: transformedProduct.name,
+              productId: transformedProduct.id,
+            },
+          })
+          return
+        }
+
         // Set default selected color if available
         if (
           transformedProduct.type === "ACCESSORY" &&
@@ -91,7 +102,7 @@ const ProductView = () => {
     }
 
     fetchProductData()
-  }, [id])
+  }, [id, navigate])
 
   // Fetch related products
   const fetchRelatedProducts = async (productType) => {
@@ -361,7 +372,7 @@ const ProductView = () => {
                   Adding...
                 </span>
               ) : (
-                <span className="flex items-center">
+                <span className="flex items-center text-white">
                   <ShoppingCart size={18} className="mr-2" />
                   ADD TO CART
                 </span>

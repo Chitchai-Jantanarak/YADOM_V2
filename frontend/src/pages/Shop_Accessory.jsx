@@ -200,7 +200,7 @@ const Shop_Accessory = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {accessories.map((product) => (
                 <div key={product.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  <Link to={`/product/ACCESSORY/${product.id}`} className="block h-full">
+                  <Link to={`/product/${product.id}`} className="block h-full">
                     <div className="bg-gray-100 py-2 px-2">
                       <div className="p-4 flex items-center justify-center h-[240px] transition-all duration-200 hover:scale-110">
                         <img

@@ -11,15 +11,14 @@ import ProductDetail from "../pages/ProductDetails.jsx"
 import ProductView from "../pages/ProductView.jsx"
 import Shop_Accessory from "../pages/Shop_Accessory.jsx"
 import Shop_Product from "../pages/Shop_Product.jsx"
-import Shop_Product_Detail from "../pages/Shop_Product_Detail.jsx"
 import Shop_Selection from "../pages/Shop_Selection.jsx"
 import ModelConfigurator from "../pages/ModelConfigurator.jsx"
 import AboutSecent from "../pages/AboutSecent.jsx"
 import AboutUs from "../pages/AboutUs.jsx"
+import Contact from "../pages/Contact.jsx"
 
-import DashboardLayout from "../components/layout/DashboardLayout.jsx"
 // Protected Pages
-
+import DashboardLayout from "../components/layout/DashboardLayout.jsx"
 import DashboardMain from "../pages/dashboard/DashboardMain.jsx"
 import DashboardAnalytics from "../pages/dashboard/DashboardAnalytics.jsx"
 import DashboardCustomers from "../pages/dashboard/DashboardCustomers.jsx"
@@ -28,6 +27,7 @@ import DashboardProduct from "../pages/dashboard/DashboardProduct.jsx"
 import DashboardSettings from "../pages/dashboard/DashboardSettings.jsx"
 
 import Unauthorized from "../pages/Unauthorized.jsx"
+import Forbidden from "../pages/Forbidden.jsx"
 
 // Auth Components
 import ProtectedRoute from "../hoc/ProtectedRoute.jsx"
@@ -53,13 +53,14 @@ function App() {
           <Route path="/PasswordReset" element={<PasswordReset />} />
           <Route path="/AboutSecent" element={<AboutSecent />} />
           <Route path="/AboutUs" element={<AboutUs />} />
+          <Route path="/Contact" element={<Contact />} />
 
           {/* Shop Routes */}
           <Route path="/product" element={<Shop_Selection />} />
           <Route path="/product/:id" element={<ProductView />} />
-          <Route path="/product/:productType/:productid" element={<ModelConfigurator />} />
-          <Route path="/Shop" element={<Shop_Product />} />
-          <Route path="/Shop_Product/:productId" element={<Shop_Product_Detail />} />
+          <Route path="/product/:productType/:productid" element={<ModelConfigurator />} /> 
+          <Route path="/Shop" element={<Shop_Selection />} />
+          <Route path="/Shop_Product" element={<Shop_Product />} />
           <Route path="/Shop_Accessory" element={<Shop_Accessory />} />
 
           {/* Dashboard Routes */}
@@ -131,8 +132,8 @@ function App() {
 
           {/* Error Routes */}
           <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/forbidden" element={<Unauthorized />} />
-          {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+          <Route path="/forbidden" element={<Forbidden />} />
+          <Route path="*" element={<Forbidden />} />
         </Routes>
       </AnimatePresence>
     </>

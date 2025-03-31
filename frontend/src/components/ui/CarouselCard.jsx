@@ -24,7 +24,7 @@ const CarouselCard = ({ images }) => {
           },
           // When window width is >= 768px
           768: {
-            slidesPerView: Math.min(5, images.length),
+            slidesPerView: Math.min(4, images.length),
             spaceBetween: 30,
           },
         }}
@@ -35,7 +35,7 @@ const CarouselCard = ({ images }) => {
           <SwiperSlide key={index} className="h-full">
             <div className="flex justify-center items-center h-full p-2">
               <div className="w-full h-full aspect-square overflow-hidden rounded-md">
-                <img src={image.src || "/placeholder.svg"} alt={image.alt} className="w-full h-full object-cover" />
+                <img src={image.src || "/placeholder.svg"} alt={image.alt} className="w-full h-full object-contain" />
               </div>
             </div>
           </SwiperSlide>

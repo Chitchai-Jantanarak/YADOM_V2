@@ -4,7 +4,7 @@ import TextCarousel from "../ui/TextCarousel";
 export default function Footer ({ carousel = false }) {
     return (
         <>
-        <div className="md:relative md:h-[500px] w-full z-40 md-clip-path">
+        <div className="md:relative md:h-[500px] w-full z-40 md-clip-path flex flex-col justify-end">
             <div className="bottom-0 w-full z-40 font-anybody">
 
                 {(carousel && (
