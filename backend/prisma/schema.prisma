@@ -25,6 +25,11 @@ enum ProductType {
   UNKNOWN       // default
 }
 
+enum ProductStatus {
+  AVAILABLE     // Product is available for purchase
+  UNAVAILABLE   // Product is not available for purchase
+}
+
 enum OrderStatus {
   WAITING       // Waiting for user to transmit the order
   PENDING       // Waiting for admin to confirm
@@ -69,6 +74,7 @@ model Product {
   price               Float
   type                ProductType         @default(UNKNOWN)
   localUrl            String
+  status              ProductStatus       @default(AVAILABLE)
 
   bones               Bone[]              // Related bones for MAIN_PRODUCT
   colors              ProductColor[]      // Related colors for ACCESSORY

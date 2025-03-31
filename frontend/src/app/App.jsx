@@ -8,6 +8,7 @@ import Register from "../pages/Register.jsx"
 import PasswordForgot from "../pages/PasswordForgot.jsx"
 import PasswordReset from "../pages/PasswordReset.jsx"
 import ProductDetail from "../pages/ProductDetails.jsx"
+import ProductView from "../pages/ProductView.jsx"
 import Shop_Accessory from "../pages/Shop_Accessory.jsx"
 import Shop_Product from "../pages/Shop_Product.jsx"
 import Shop_Product_Detail from "../pages/Shop_Product_Detail.jsx"
@@ -54,6 +55,7 @@ function App() {
 
           {/* Shop Routes */}
           <Route path="/product" element={<Shop_Selection />} />
+          <Route path="/product/:id" element={<ProductView />} />
           <Route path="/Shop_Product" element={<Shop_Product />} />
           <Route path="/Shop_Product/:productId" element={<Shop_Product_Detail />} />
           <Route path="/Shop_Accessory" element={<Shop_Accessory />} />

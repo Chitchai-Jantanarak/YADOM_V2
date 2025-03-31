@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express"
 import { prisma } from "../lib/prisma.js"
 import { ApiError } from "../middleware/errorMiddleware.js"
-import { ProductType } from "@prisma/client"
+import { ProductType, ProductStatus } from "@prisma/client"
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -14,6 +14,8 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 
     // Get type filter if provided
     const type = req.query.type as ProductType | undefined
+    const status = req.query.status as ProductStatus | undefined
+    const showAll = req.query.showAll === "true"
 
     // Build where clause
     const where: any = {
@@ -23,6 +25,15 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
     // Add type filter if provided
     if (type) {
       where.type = type
+    }
+
+    // Add status filter if provided
+    if (status) {
+      where.status = status
+    } else if (!showAll) {
+      // By default, only show available products to customers
+      // Admin users should pass showAll=true to see all products
+      where.status = "AVAILABLE"
     }
 
     const products = await prisma.product.findMany({
@@ -98,7 +109,7 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
 // @access  Private/Admin
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, description, price, type, localUrl, bones, colors } = req.body
+    const { name, description, price, type, localUrl, bones, colors, status } = req.body
 
     // Validate input
     if (!name || !price || !type || !localUrl) {
@@ -113,6 +124,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         price: Number.parseFloat(price),
         type,
         localUrl,
+        status: status || "AVAILABLE",
       },
     })
 
@@ -171,7 +183,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params
-    const { name, description, price, type, localUrl, colors } = req.body
+    const { name, description, price, type, localUrl, colors, status } = req.body
 
     const product = await prisma.product.findUnique({
       where: { id: Number.parseInt(id) },
@@ -191,6 +203,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         price: price ? Number.parseFloat(price) : product.price,
         type: type || product.type,
         localUrl: localUrl || product.localUrl,
+        status: status || product.status,
       },
     })
 
@@ -225,6 +238,37 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
     })
 
     res.json(completeProduct)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Update product status (admin/owner only)
+// @route   PATCH /api/products/:id/status
+// @access  Private/Admin
+export const updateProductStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params
+    const { status } = req.body
+
+    if (!status || !Object.values(ProductStatus).includes(status as ProductStatus)) {
+      return next(ApiError.badRequest("Invalid status value"))
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: Number.parseInt(id) },
+    })
+
+    if (!product) {
+      return next(ApiError.notFound("Product not found"))
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: Number.parseInt(id) },
+      data: { status: status as ProductStatus },
+    })
+
+    res.json(updatedProduct)
   } catch (error) {
     next(error)
   }
@@ -266,17 +310,30 @@ export const getProductsByType = async (req: Request, res: Response, next: NextF
     const page = Number.parseInt(req.query.page as string) || 1
     const limit = Number.parseInt(req.query.limit as string) || 10
     const skip = (page - 1) * limit
+    const status = req.query.status as ProductStatus | undefined
+    const showAll = req.query.showAll === "true"
 
     // Validate type
     if (!Object.values(ProductType).includes(type as ProductType)) {
       return next(ApiError.badRequest("Invalid product type"))
     }
 
+    // Build where clause
+    const where: any = {
+      type: type as ProductType,
+      deletedAt: null,
+    }
+
+    // Add status filter if provided
+    if (status) {
+      where.status = status
+    } else if (!showAll) {
+      // By default, only show available products to customers
+      where.status = "AVAILABLE"
+    }
+
     const products = await prisma.product.findMany({
-      where: {
-        type: type as ProductType,
-        deletedAt: null,
-      },
+      where,
       include: {
         colors: type === "ACCESSORY",
         bones:
@@ -296,10 +353,66 @@ export const getProductsByType = async (req: Request, res: Response, next: NextF
     })
 
     const total = await prisma.product.count({
-      where: {
-        type: type as ProductType,
-        deletedAt: null,
+      where,
+    })
+
+    res.json({
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
       },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// @desc    Get available products
+// @route   GET /api/products/available
+// @access  Public
+export const getAvailableProducts = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const page = Number.parseInt(req.query.page as string) || 1
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const skip = (page - 1) * limit
+    const type = req.query.type as ProductType | undefined
+
+    // Build where clause
+    const where: any = {
+      status: "AVAILABLE",
+      deletedAt: null,
+    }
+
+    // Add type filter if provided
+    if (type) {
+      where.type = type
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      include: {
+        colors: true,
+        bones:
+          type === "MAIN_PRODUCT"
+            ? {
+                include: {
+                  text: true,
+                },
+              }
+            : undefined,
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    const total = await prisma.product.count({
+      where,
     })
 
     res.json({

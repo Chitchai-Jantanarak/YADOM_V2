@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import AboutMail from "../components/ui/AboutMail"
-import TextCarousel from "../components/ui/TextCarousel"
+import Lenis from "lenis"
 import NavBar2 from "../components/layout/NavBar2"
 import Footer from "../components/layout/Footer"
 import { X } from "lucide-react"
@@ -58,6 +58,31 @@ const AboutSecent = () => {
   // Ensure modal is ready after component mounts
   useEffect(() => {
     setModalReady(true)
+  }, [])
+
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      direction: "vertical",
+      gestureDirection: "vertical",
+      smooth: true,
+      mouseMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+      infinite: false,
+    })
+
+    function raf(time) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+
+    requestAnimationFrame(raf)
+
+    return () => {
+      lenis.destroy()
+    }
   }, [])
 
   const openModal = (category) => {

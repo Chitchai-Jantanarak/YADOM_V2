@@ -6,16 +6,14 @@
 export const transformProduct = (product) => {
   if (!product) return null
 
-  const imageUrl = product.localUrl && product.localUrl.trim() !== "" ? product.localUrl : null
-
   return {
     id: product.id,
     name: product.name,
     description: product.description,
     price: product.price,
     type: product.type,
-    // Handle image path
-    image: product.localUrl || null,
+    // Keep the original localUrl for compatibility with fileUtils
+    localUrl: product.localUrl,
     // Extract colors from ProductColor objects
     colors: product.colors && Array.isArray(product.colors) ? product.colors.map((color) => color.colorCode) : [],
     // Include bones for MAIN_PRODUCT if available

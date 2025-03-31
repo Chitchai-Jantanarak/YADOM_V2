@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Plus, Search, Filter, ArrowUpDown, Edit, Trash2, Package, Info, AlertTriangle } from "lucide-react"
+import { Plus, Search, Filter, ArrowUpDown, Edit, Trash2, Package, Info, EyeOff, Check } from "lucide-react"
 import { productService } from "../../services/productService"
 import { getProductAssetPath } from "../../utils/fileUtils"
 import { handleImageError } from "../../utils/imageUtils"
@@ -20,6 +20,7 @@ export default function DashboardProduct() {
   })
   const [filters, setFilters] = useState({
     type: "",
+    status: "",
     search: "",
   })
   const [sortBy, setSortBy] = useState("createdAt")
@@ -48,6 +49,8 @@ export default function DashboardProduct() {
         page: pagination.page,
         limit: pagination.limit,
         type: filters.type || undefined,
+        status: filters.status || undefined,
+        showAll: true, // Admin view should show all products
       }
 
       const data = await productService.getProducts(options)
@@ -121,6 +124,17 @@ export default function DashboardProduct() {
     }
   }
 
+  const handleUpdateStatus = async (id, status) => {
+    try {
+      await productService.updateProductStatus(id, status)
+      // Refresh product list
+      fetchProducts()
+    } catch (err) {
+      console.error("Error updating product status:", err)
+      setError("Failed to update product status. Please try again.")
+    }
+  }
+
   const getProductTypeLabel = (type) => {
     switch (type) {
       case "MAIN_PRODUCT":
@@ -143,6 +157,28 @@ export default function DashboardProduct() {
     }
   }
 
+  const getProductStatusLabel = (status) => {
+    switch (status) {
+      case "AVAILABLE":
+        return "Available"
+      case "UNAVAILABLE":
+        return "Unavailable"
+      default:
+        return "Unknown"
+    }
+  }
+
+  const getProductStatusColor = (status) => {
+    switch (status) {
+      case "AVAILABLE":
+        return "bg-green-100 text-green-800"
+      case "UNAVAILABLE":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
   // Check if user can delete products
   const canDeleteProducts = userRole === ROLES.OWNER
 
@@ -156,23 +192,23 @@ export default function DashboardProduct() {
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
         >
           <Plus size={18} />
-          <span>Add Product</span>
+          <span className="text-white">Add Product</span>
         </Link>
       </div>
 
       {userRole !== ROLES.ADMIN && (
         <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded">
-            <div className="flex items-center">
+          <div className="flex items-center">
             <Info className="h-5 w-5 mr-2" />
             <span>
-                This application uses local assets from the <code className="bg-amber-100 px-1 rounded">/assets/</code>{" "}
-                directory. Make sure to place your 3D models in{" "}
-                <code className="bg-amber-100 px-1 rounded">/assets/models/products/</code> and images in{" "}
-                <code className="bg-amber-100 px-1 rounded">/assets/images/products/</code> with the product ID as the
-                filename.
+              This application uses local assets from the <code className="bg-amber-100 px-1 rounded">/assets/</code>{" "}
+              directory. Make sure to place your 3D models in{" "}
+              <code className="bg-amber-100 px-1 rounded">/assets/models/products/</code> and images in{" "}
+              <code className="bg-amber-100 px-1 rounded">/assets/images/products/</code> with the product ID as the
+              filename.
             </span>
-            </div>
-      </div>
+          </div>
+        </div>
       )}
 
       {/* Filters and Search */}
@@ -204,6 +240,22 @@ export default function DashboardProduct() {
                 <option value="">All Types</option>
                 <option value="MAIN_PRODUCT">Main Products</option>
                 <option value="ACCESSORY">Accessories</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="w-48">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <select
+                name="status"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                value={filters.status}
+                onChange={handleFilterChange}
+              >
+                <option value="">All Status</option>
+                <option value="AVAILABLE">Available</option>
+                <option value="UNAVAILABLE">Unavailable</option>
               </select>
             </div>
           </div>
@@ -312,7 +364,9 @@ export default function DashboardProduct() {
                       <div className="text-sm text-gray-900">${product.price?.toFixed(2)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Available</span>
+                      <span className={`px-2 py-1 text-xs rounded-full ${getProductStatusColor(product.status)}`}>
+                        {getProductStatusLabel(product.status)}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
@@ -323,6 +377,25 @@ export default function DashboardProduct() {
                           <Edit size={18} />
                           <span className="sr-only">Edit</span>
                         </Link>
+                        {product.status === "AVAILABLE" ? (
+                          <button
+                            onClick={() => handleUpdateStatus(product.id, "UNAVAILABLE")}
+                            className="text-amber-600 hover:text-amber-900 p-1 rounded hover:bg-amber-50"
+                            title="Mark as unavailable"
+                          >
+                            <EyeOff size={18} />
+                            <span className="sr-only">Mark as unavailable</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleUpdateStatus(product.id, "AVAILABLE")}
+                            className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                            title="Mark as available"
+                          >
+                            <Check size={18} />
+                            <span className="sr-only">Mark as available</span>
+                          </button>
+                        )}
                         {canDeleteProducts && (
                           <button
                             onClick={() => handleDeleteProduct(product.id)}

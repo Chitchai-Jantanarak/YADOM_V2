@@ -20,6 +20,7 @@ import { getProductAssetPath, getFallbackAssetPath } from "../utils/fileUtils"
 import { handleImageError } from "../utils/imageUtils"
 import ModelViewer from "../components/ui/ModelViewer"
 import { ROLES, authService } from "../services/authService"
+import { useApi } from "../hooks/useApi"
 
 export default function ProductDetail() {
   const { id } = useParams()
@@ -34,17 +35,20 @@ export default function ProductDetail() {
     localUrl: "",
     bones: [],
     colors: [],
+    status: "AVAILABLE",
   })
 
   const [loading, setLoading] = useState(!isNewProduct)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
-  const [status, setStatus] = useState("available") // available or soldout
   const [aromas, setAromas] = useState([])
   const [selectedAromas, setSelectedAromas] = useState([])
   const [modelLoadError, setModelLoadError] = useState(false)
   const [userRole, setUserRole] = useState(null)
+
+  // Use the useApi hook for updating product status
+  const { execute: executeStatusUpdate, loading: statusUpdateLoading } = useApi(productService.updateProductStatus)
 
   useEffect(() => {
     // Get user role
@@ -77,7 +81,6 @@ export default function ProductDetail() {
         price: data.price?.toString() || "",
       })
 
-      setStatus(data.deletedAt ? "soldout" : "available")
       setLoading(false)
     } catch (err) {
       console.error("Error fetching product:", err)
@@ -113,8 +116,29 @@ export default function ProductDetail() {
     }))
   }
 
-  const handleStatusChange = (newStatus) => {
-    setStatus(newStatus)
+  const handleStatusChange = async (newStatus) => {
+    if (isNewProduct) {
+      // For new products, just update the local state
+      setProduct((prev) => ({
+        ...prev,
+        status: newStatus,
+      }))
+      return
+    }
+
+    try {
+      // For existing products, update via API
+      const result = await executeStatusUpdate(id, newStatus)
+      if (result) {
+        setProduct((prev) => ({
+          ...prev,
+          status: newStatus,
+        }))
+        setSuccess(`Product status updated to ${newStatus.toLowerCase()}`)
+      }
+    } catch (err) {
+      setError("Failed to update product status. Please try again.")
+    }
   }
 
   const handleAromaToggle = (aromaId) => {
@@ -278,7 +302,7 @@ export default function ProductDetail() {
             ) : (
               <>
                 <Save size={18} />
-                <span>Save</span>
+                <span className="text-white">Save</span>
               </>
             )}
           </button>
@@ -287,17 +311,17 @@ export default function ProductDetail() {
 
       {userRole !== ROLES.ADMIN && (
         <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-700 p-4 mb-6 rounded">
-            <div className="flex items-center">
+          <div className="flex items-center">
             <Info className="h-5 w-5 mr-2" />
             <span>
-                This application uses local assets from the <code className="bg-amber-100 px-1 rounded">/assets/</code>{" "}
-                directory. Make sure to place your 3D models in{" "}
-                <code className="bg-amber-100 px-1 rounded">/assets/models/products/</code> and images in{" "}
-                <code className="bg-amber-100 px-1 rounded">/assets/images/products/</code> with the product ID as the
-                filename.
+              This application uses local assets from the <code className="bg-amber-100 px-1 rounded">/assets/</code>{" "}
+              directory. Make sure to place your 3D models in{" "}
+              <code className="bg-amber-100 px-1 rounded">/assets/models/products/</code> and images in{" "}
+              <code className="bg-amber-100 px-1 rounded">/assets/images/products/</code> with the product ID as the
+              filename.
             </span>
-            </div>
-      </div>
+          </div>
+        </div>
       )}
 
       {/* Alerts */}
@@ -373,16 +397,16 @@ export default function ProductDetail() {
                   <input
                     type="radio"
                     name="status"
-                    checked={status === "available"}
-                    onChange={() => handleStatusChange("available")}
+                    checked={product.status === "AVAILABLE"}
+                    onChange={() => handleStatusChange("AVAILABLE")}
                     className="sr-only"
                   />
                   <div
                     className={`w-6 h-6 rounded-md flex items-center justify-center mr-2 ${
-                      status === "available" ? "bg-blue-500 text-white" : "border border-gray-300"
+                      product.status === "AVAILABLE" ? "bg-blue-500 text-white" : "border border-gray-300"
                     }`}
                   >
-                    {status === "available" && <Check className="h-4 w-4" />}
+                    {product.status === "AVAILABLE" && <Check className="h-4 w-4" />}
                   </div>
                   <span>Available</span>
                 </label>
@@ -391,20 +415,25 @@ export default function ProductDetail() {
                   <input
                     type="radio"
                     name="status"
-                    checked={status === "soldout"}
-                    onChange={() => handleStatusChange("soldout")}
+                    checked={product.status === "UNAVAILABLE"}
+                    onChange={() => handleStatusChange("UNAVAILABLE")}
                     className="sr-only"
                   />
                   <div
                     className={`w-6 h-6 rounded-md flex items-center justify-center mr-2 ${
-                      status === "soldout" ? "bg-blue-500 text-white" : "border border-gray-300"
+                      product.status === "UNAVAILABLE" ? "bg-blue-500 text-white" : "border border-gray-300"
                     }`}
                   >
-                    {status === "soldout" && <Check className="h-4 w-4" />}
+                    {product.status === "UNAVAILABLE" && <Check className="h-4 w-4" />}
                   </div>
-                  <span>Sold out</span>
+                  <span>Unavailable</span>
                 </label>
               </div>
+              <p className="text-sm text-gray-500 mt-2">
+                {product.status === "AVAILABLE"
+                  ? "Product will be visible to customers"
+                  : "Product will be hidden from customers"}
+              </p>
             </div>
 
             {!isNewProduct && canDeleteProducts && (
