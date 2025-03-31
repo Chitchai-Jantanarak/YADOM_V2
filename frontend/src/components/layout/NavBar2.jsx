@@ -91,7 +91,7 @@ const NavBar2 = () => {
   const menuItems = [
     {
       name: "PRODUCT",
-      link: "/Shop_selection",
+      link: "/Shop",
       subHead: true,
       icon: ShoppingBag,
       clickable: false, // PRODUCT is not clickable, only toggles submenu like ABOUT

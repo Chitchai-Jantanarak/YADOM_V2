@@ -37,15 +37,15 @@ const Starter = () => {
           color="white"
         />
         <div className="flex flex-col sm:flex-row w-full gap-4 sm:gap-0 mt-4">
-          <Link to="/login" className="card bg-blue-400 grid h-16 sm:h-20 flex-grow place-items-center rounded-lg">
-            <button className="tracking-widest transition-all duration-300 util-textshadow-black hover:border-black w-full h-full">
+          <Link to="/login" className="card bg-blue-400 grid h-16 sm:h-20 flex-grow place-items-center rounded-2xl group">
+            <button className="tracking-widest transition-all duration-300 util-textshadow-black group-hover:border-black group-hover:text-white w-full h-full">
               LOGIN
             </button>
           </Link>
           <div className="divider sm:relative sm:top-4 sm:mx-5 my-2 sm:my-0">OR</div>
           <Link
             to="/register"
-            className="card border-2 bg-base-content flex-grow place-items-center grid h-16 sm:h-20 rounded-lg"
+            className="card border-2 bg-base-content flex-grow place-items-center grid h-16 sm:h-20 rounded-2xl"
           >
             <button className="text-white tracking-widest transition-all duration-300 util-textshadow-default w-full h-full">
               SIGN UP

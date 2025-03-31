@@ -58,7 +58,7 @@ function App() {
           <Route path="/product" element={<Shop_Selection />} />
           <Route path="/product/:id" element={<ProductView />} />
           <Route path="/product/:productType/:productid" element={<ModelConfigurator />} />
-          <Route path="/Shop_Product" element={<Shop_Product />} />
+          <Route path="/Shop" element={<Shop_Product />} />
           <Route path="/Shop_Product/:productId" element={<Shop_Product_Detail />} />
           <Route path="/Shop_Accessory" element={<Shop_Accessory />} />
 

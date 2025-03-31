@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ShoppingCart, ArrowLeft, Minus, Plus, AlertCircle } from "lucide-react"
+import { ShoppingCart, ArrowLeft, Minus, Plus, AlertCircle, Laptop, X } from "lucide-react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { OrbitControls, useGLTF, ContactShadows, Environment } from "@react-three/drei"
 import { HexColorPicker } from "react-colorful"
@@ -13,6 +13,7 @@ import { isAuthenticated, authService } from "../services/authService"
 import LoginModal from "../components/ui/LoginModal"
 import * as THREE from "three"
 import React from "react"
+import { useMobile } from "../hooks/useMobile.js"
 
 // Debounce function to limit how often a function is called
 const debounce = (func, delay) => {
@@ -79,6 +80,40 @@ const FloatingBubble = ({ size, position, color, delay = 0 }) => {
         animationDuration: `${Math.random() * 10 + 15}s`,
       }}
     />
+  )
+}
+
+// Mobile blocking modal component
+const MobileBlockingModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl w-[90%] max-w-md p-6 relative border border-white/50">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="flex flex-col items-center text-center">
+          <Laptop className="h-16 w-16 text-blue-500 mb-4" />
+          <h2 className="text-2xl font-bold mb-3">Desktop Only Feature</h2>
+          <p className="text-gray-600 mb-6">
+            The 3D product configurator is only available on desktop devices. Please visit this page on a computer for
+            the full experience.
+          </p>
+          <button
+            onClick={onClose}
+            className="bg-gradient-to-r from-pink-400 to-purple-500 text-white px-8 py-3 rounded-full hover:opacity-90 transition-all shadow-md"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -305,7 +340,7 @@ function ProductModel({ url }) {
         }
       }}
     >
-      <primitive object={scene} scale={1.5} position={[0, 0, 0]} rotation={[0, Math.PI / 4, 0]} />
+      <primitive object={scene} scale={1} position={[0, 0, 0]} rotation={[0, Math.PI / 4, 0]} />
     </group>
   )
 }
@@ -327,6 +362,17 @@ const ModelConfigurator = () => {
   const [totalPrice, setTotalPrice] = useState(0)
   const [modelParts, setModelParts] = useState([])
   const snap = useSnapshot(state)
+
+  // Mobile detection
+  const isMobile = useMobile()
+  const [showMobileModal, setShowMobileModal] = useState(false)
+
+  // Check if mobile on mount
+  useEffect(() => {
+    if (isMobile) {
+      setShowMobileModal(true)
+    }
+  }, [isMobile])
 
   // Handle color change with debounce
   const [debouncedColor, setDebouncedColor] = useState(null)
@@ -505,6 +551,12 @@ const ModelConfigurator = () => {
       setAddingToCart(false)
       alert("Failed to add product to cart. Please try again.")
     }
+  }
+
+  // Handle mobile modal close
+  const handleMobileModalClose = () => {
+    setShowMobileModal(false)
+    navigate(-1) // Go back when closed
   }
 
   if (loading) {
@@ -737,16 +789,21 @@ const ModelConfigurator = () => {
         </div>
       </div>
 
+      {/* Mobile Blocking Modal */}
+      <MobileBlockingModal isOpen={showMobileModal} onClose={handleMobileModalClose} />
+
       {/* Login Modal */}
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onLogin={handleLogin}
         redirectPath="/starter"
+        message="Please login to add items to your cart. You need to be logged in to save your customizations and complete your purchase."
       />
     </div>
   )
 }
+
 
 export default ModelConfigurator
 
