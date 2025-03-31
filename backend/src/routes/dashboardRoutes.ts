@@ -5,6 +5,6 @@ import { protect, admin, owner } from "../middleware/authMiddleware.js"
 const router = express.Router()
 
 // Owner-only route
-router.get("/stats", protect, owner, getDashboardStats)
+router.get("/stats", protect, admin, getDashboardStats)
 
 export default router

@@ -7,11 +7,13 @@ import Starter from "../pages/Starter.jsx"
 import Register from "../pages/Register.jsx"
 import PasswordForgot from "../pages/PasswordForgot.jsx"
 import PasswordReset from "../pages/PasswordReset.jsx"
+import ProductDetail from "../pages/ProductDetails.jsx"
 import Shop_Accessory from "../pages/Shop_Accessory.jsx"
 import Shop_Product from "../pages/Shop_Product.jsx"
 import Shop_Product_Detail from "../pages/Shop_Product_Detail.jsx"
 import Shop_Selection from "../pages/Shop_Selection.jsx"
 import AboutSecent from "../pages/AboutSecent.jsx"
+import AboutUs from "../pages/AboutUs.jsx"
 
 import DashboardLayout from "../components/layout/DashboardLayout.jsx"
 // Protected Pages
@@ -20,6 +22,7 @@ import DashboardMain from "../pages/dashboard/DashboardMain.jsx"
 import DashboardAnalytics from "../pages/dashboard/DashboardAnalytics.jsx"
 import DashboardCustomers from "../pages/dashboard/DashboardCustomers.jsx"
 import DashboardOrders from "../pages/dashboard/DashboardOrders.jsx"
+import DashboardProduct from "../pages/dashboard/DashboardProduct.jsx"
 import DashboardSettings from "../pages/dashboard/DashboardSettings.jsx"
 
 import Unauthorized from "../pages/Unauthorized.jsx"
@@ -47,6 +50,7 @@ function App() {
           <Route path="/PasswordForgot" element={<PasswordForgot />} />
           <Route path="/PasswordReset" element={<PasswordReset />} />
           <Route path="/AboutSecent" element={<AboutSecent />} />
+          <Route path="/AboutUs" element={<AboutUs />} />
 
           {/* Shop Routes */}
           <Route path="/product" element={<Shop_Selection />} />
@@ -94,6 +98,21 @@ function App() {
                   <DashboardOrders />
                 </ProtectedRoute>
               } 
+            />
+
+            <Route
+              path="/dashboard/products"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.ADMIN, ROLES.OWNER]}>
+                  <DashboardProduct />
+                </ProtectedRoute>}
+            />
+            <Route
+              path="/dashboard/products/:id"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.ADMIN, ROLES.OWNER]}>
+                  <ProductDetail />
+                </ProtectedRoute>}
             />
             
             <Route 

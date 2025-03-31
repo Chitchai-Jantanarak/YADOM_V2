@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { User, LogOut, Settings, ShoppingBag, HelpCircle, Home, ChevronDown, Menu, X } from "lucide-react"
@@ -42,12 +40,12 @@ const NavBar2 = () => {
           const result = await imageService.getProfileImage(currentUser.id)
           if (result.success && result.url) {
             setImageUrl(result.url)
-            debugImageLoading("NavBar-API", result.url, currentUser)
+            // debugImageLoading("NavBar-API", result.url, currentUser)
           } else {
             // Fall back to the utility function
             const url = getUserImageUrl(currentUser)
             setImageUrl(url)
-            debugImageLoading("NavBar-Fallback", url, currentUser)
+            // debugImageLoading("NavBar-Fallback", url, currentUser)
           }
         } catch (error) {
           console.error("Error loading profile image:", error)
@@ -71,7 +69,7 @@ const NavBar2 = () => {
             // Update image URL when user changes
             const url = getUserImageUrl(newUser)
             setImageUrl(url)
-            debugImageLoading("NavBar-Storage", url, newUser)
+            // debugImageLoading("NavBar-Storage", url, newUser)
           }
         } catch (error) {
           console.error("Error parsing user data:", error)
@@ -114,8 +112,12 @@ const NavBar2 = () => {
       ],
     },
     { name: "CONTACT", link: "/contact", subHead: false, icon: User },
-    { name: "CART", link: "/cart", subHead: false, icon: ShoppingBag },
   ]
+
+  // Only add CART to menu items if user is authenticated
+  if (user) {
+    menuItems.push({ name: "CART", link: "/cart", subHead: false, icon: ShoppingBag })
+  }
 
   // Only add LOGIN to menu items if user is not authenticated
   if (!user) {
@@ -770,13 +772,6 @@ const NavBar2 = () => {
                 </Link>
               </div>
             )}
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-gray-200 p-4 bg-gray-50">
-            <div className="text-center text-sm text-gray-500">
-              <p>© 2023 Yadom Cooperations</p>
-            </div>
           </div>
         </div>
       )}

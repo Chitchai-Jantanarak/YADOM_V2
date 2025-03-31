@@ -44,7 +44,7 @@ const UserAvatar = ({ user, size = "md", className = "", fallbackType = "avatar"
             const result = await imageService.getProfileImage(user.id)
             if (result.success && result.url) {
               setImageUrl(result.url)
-              debugImageLoading("UserAvatar-API", result.url, user)
+              // debugImageLoading("UserAvatar-API", result.url, user)
               return
             }
           } catch (error) {
@@ -56,7 +56,7 @@ const UserAvatar = ({ user, size = "md", className = "", fallbackType = "avatar"
         const url = getUserImageUrl(user)
         setImageUrl(url)
         setImageError(!url) // Set error state if URL is null
-        debugImageLoading("UserAvatar", url, user)
+        // debugImageLoading("UserAvatar", url, user)
       }
     }
 

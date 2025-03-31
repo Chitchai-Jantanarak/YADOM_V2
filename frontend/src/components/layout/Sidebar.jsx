@@ -7,8 +7,10 @@ import UserAvatar from "../ui/UserAvatar"
 import Logo from "../ui/Logo"
 import { useEffect, useRef, useState } from "react"
 import { getUiAvatarUrl, getUserImageUrl } from "../../utils/imageUtils"
-import { debugImageLoading } from "../../utils/debugUtils"
 import imageService from "../../services/imageService"
+
+// Debugging console 
+// import { debugImageLoading } from "../../utils/debugUtils"
 
 export const Sidebar = () => {
   const location = useLocation()
@@ -33,12 +35,12 @@ export const Sidebar = () => {
           const result = await imageService.getProfileImage(currentUser.id)
           if (result.success && result.url) {
             setImageUrl(result.url)
-            debugImageLoading("Sidebar-API", result.url, currentUser)
+          //   debugImageLoading("Sidebar-API", result.url, currentUser)
           } else {
             // Fall back to the utility function
             const url = getUserImageUrl(currentUser)
             setImageUrl(url)
-            debugImageLoading("Sidebar-Fallback", url, currentUser)
+            // debugImageLoading("Sidebar-Fallback", url, currentUser)
           }
         } catch (error) {
           console.error("Error loading profile image:", error)
@@ -62,7 +64,7 @@ export const Sidebar = () => {
             // Update image URL when user changes
             const url = getUserImageUrl(newUser)
             setImageUrl(url)
-            debugImageLoading("Sidebar-Storage", url, newUser)
+            // debugImageLoading("Sidebar-Storage", url, newUser)
           }
         } catch (error) {
           console.error("Error parsing user data:", error)
