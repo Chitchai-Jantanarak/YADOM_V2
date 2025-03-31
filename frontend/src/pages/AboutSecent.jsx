@@ -5,6 +5,7 @@ import AboutMail from "../components/ui/AboutMail"
 import Lenis from "lenis"
 import NavBar2 from "../components/layout/NavBar2"
 import Footer from "../components/layout/Footer"
+import PageTransition from "../components/layout/PageTransition"
 import { X } from "lucide-react"
 
 // IMAGE ASSETS
@@ -189,5 +190,5 @@ const AboutSecent = () => {
   )
 }
 
-export default AboutSecent
+export default PageTransition(AboutSecent);
 

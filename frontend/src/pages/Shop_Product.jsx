@@ -175,7 +175,7 @@ const Shop_Product = () => {
                     <p className="text-2xl font-semibold">${product.price?.toFixed(2)}</p>
                     <div className="flex gap-4 mt-4">
                       <Link
-                        to={`/product/${product.id}`}
+                        to={`/product/MAIN_PRODUCT/${product.id}`}
                         className="inline-block bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition-colors text-lg"
                       >
                         Try!

@@ -13,6 +13,7 @@ import Shop_Accessory from "../pages/Shop_Accessory.jsx"
 import Shop_Product from "../pages/Shop_Product.jsx"
 import Shop_Product_Detail from "../pages/Shop_Product_Detail.jsx"
 import Shop_Selection from "../pages/Shop_Selection.jsx"
+import ModelConfigurator from "../pages/ModelConfigurator.jsx"
 import AboutSecent from "../pages/AboutSecent.jsx"
 import AboutUs from "../pages/AboutUs.jsx"
 
@@ -56,6 +57,7 @@ function App() {
           {/* Shop Routes */}
           <Route path="/product" element={<Shop_Selection />} />
           <Route path="/product/:id" element={<ProductView />} />
+          <Route path="/product/:productType/:productid" element={<ModelConfigurator />} />
           <Route path="/Shop_Product" element={<Shop_Product />} />
           <Route path="/Shop_Product/:productId" element={<Shop_Product_Detail />} />
           <Route path="/Shop_Accessory" element={<Shop_Accessory />} />

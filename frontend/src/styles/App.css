@@ -256,7 +256,6 @@ section {
   height: 800vh;
 }
 
-/* --------- Alert --------- */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -267,6 +266,29 @@ section {
     transform: translateY(0);
   }
 }
+
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-15px) translateX(15px);
+  }
+  50% {
+    transform: translateY(0) translateX(30px);
+  }
+  75% {
+    transform: translateY(15px) translateX(15px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+.animate-float {
+  animation: float 20s ease-in-out infinite;
+}
+
 
 @media (min-width: 768px) {
   .md-clip-path {

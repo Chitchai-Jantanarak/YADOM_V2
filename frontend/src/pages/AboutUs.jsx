@@ -6,6 +6,7 @@ import { useInView } from "react-intersection-observer"
 import Lenis from "lenis"
 import NavBar2 from "../components/layout/NavBar2"
 import Footer from "../components/layout/Footer"
+import PageTransition from "../components/layout/PageTransition"
 
 import GlobeExp from "../components/experience/globeExp"
 import INHL1 from "../assets/images/AboutUs/inhaler1.jpg"
@@ -454,5 +455,5 @@ const AboutUs = () => {
   )
 }
 
-export default AboutUs
+export default PageTransition(AboutUs)
 

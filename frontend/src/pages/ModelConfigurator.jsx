@@ -2,15 +2,28 @@
 
 import { useState, useEffect, useRef, Suspense } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ShoppingCart, ArrowLeft, Palette } from "lucide-react"
-import { Canvas } from "@react-three/fiber"
+import { ShoppingCart, ArrowLeft, Minus, Plus, AlertCircle } from "lucide-react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { OrbitControls, useGLTF, ContactShadows, Environment } from "@react-three/drei"
 import { HexColorPicker } from "react-colorful"
 import { proxy, useSnapshot } from "valtio"
-import { productService } from "../../services/productService"
-import { transformProduct } from "../../utils/dataTransformers"
-import { isAuthenticated, authService } from "../../services/authService"
-import LoginModal from "../../components/ui/LoginModal"
+import { productService } from "../services/productService"
+import { transformProduct } from "../utils/dataTransformers"
+import { isAuthenticated, authService } from "../services/authService"
+import LoginModal from "../components/ui/LoginModal"
+import * as THREE from "three"
+import React from "react"
+
+// Debounce function to limit how often a function is called
+const debounce = (func, delay) => {
+  let timeoutId
+  return (...args) => {
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      func(...args)
+    }, delay)
+  }
+}
 
 // State management with valtio
 const state = proxy({
@@ -18,8 +31,288 @@ const state = proxy({
   items: {},
 })
 
+// Error boundary for 3D rendering
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Three.js error caught:", error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || null
+    }
+    return this.props.children
+  }
+}
+
+// Floating bubble component
+const FloatingBubble = ({ size, position, color, delay = 0 }) => {
+  const bubbleRef = useRef(null)
+
+  useEffect(() => {
+    if (bubbleRef.current) {
+      bubbleRef.current.style.animationDelay = `${delay}s`
+    }
+  }, [delay])
+
+  return (
+    <div
+      ref={bubbleRef}
+      className="absolute rounded-full animate-float"
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        left: `${position[0]}%`,
+        top: `${position[1]}%`,
+        background: `radial-gradient(circle at 30% 30%, ${color}, transparent)`,
+        opacity: 0.7,
+        filter: "blur(8px)",
+        animationDuration: `${Math.random() * 10 + 15}s`,
+      }}
+    />
+  )
+}
+
+// Fallback model - a colorful cube
+function FallbackModel({ scale = 1.5 }) {
+  const cubeRef = useRef()
+
+  // Continuous animation
+  useFrame((state) => {
+    if (cubeRef.current) {
+      const t = state.clock.getElapsedTime()
+      cubeRef.current.rotation.y = t * 0.2
+      cubeRef.current.position.y = Math.sin(t / 2) * 0.05
+    }
+  })
+
+  // Create a cube with different colored faces
+  return (
+    <group ref={cubeRef} scale={scale} position={[0, 0, 0]}>
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial
+          color="#FFD700" // Yellow (top)
+          roughness={0.7}
+          metalness={0.1}
+          envMapIntensity={0.5}
+          attach="material-0"
+        />
+        <meshStandardMaterial
+          color="#4682B4" // Steel Blue (side)
+          roughness={0.7}
+          metalness={0.1}
+          envMapIntensity={0.5}
+          attach="material-1"
+        />
+        <meshStandardMaterial
+          color="#D3D3D3" // Light Gray
+          roughness={0.7}
+          metalness={0.1}
+          envMapIntensity={0.5}
+          attach="material-2"
+        />
+        <meshStandardMaterial
+          color="#D3D3D3" // Light Gray
+          roughness={0.7}
+          metalness={0.1}
+          envMapIntensity={0.5}
+          attach="material-3"
+        />
+        <meshStandardMaterial
+          color="#D3D3D3" // Light Gray
+          roughness={0.7}
+          metalness={0.1}
+          envMapIntensity={0.5}
+          attach="material-4"
+        />
+        <meshStandardMaterial
+          color="#D3D3D3" // Light Gray
+          roughness={0.7}
+          metalness={0.1}
+          envMapIntensity={0.5}
+          attach="material-5"
+        />
+      </mesh>
+    </group>
+  )
+}
+
+// 3D Model component with error handling
+function ProductModel({ url }) {
+  const ref = useRef()
+  const snap = useSnapshot(state)
+  const { camera } = useThree()
+  const [hovered, setHovered] = useState(null)
+  const [modelLoaded, setModelLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const floating = useRef(false)
+  const [modelParts, setModelParts] = useState([])
+
+  // Try to load the model with error handling
+  const { scene, nodes, materials } = useGLTF(
+    url,
+    // Success callback
+    (gltf) => {
+      console.log("Model loaded successfully:", url)
+      setModelLoaded(true)
+      setLoadError(false)
+
+      // Extract model parts (meshes) and automatically set up state
+      const parts = []
+      gltf.scene.traverse((child) => {
+        if (child.isMesh) {
+          // Create a unique ID for each mesh
+          const partId = child.name || `part_${parts.length}`
+          parts.push({
+            id: partId,
+            name: child.name || `Part ${parts.length + 1}`,
+            mesh: child,
+            originalMaterial: child.material.clone(),
+          })
+
+          // Initialize state for this part if not already set
+          if (!state.items[partId]) {
+            // Get the current color of the mesh
+            const color = new THREE.Color()
+            if (child.material && child.material.color) {
+              color.copy(child.material.color)
+            }
+            state.items[partId] = "#" + color.getHexString()
+          }
+        }
+      })
+
+      // Set first part as current automatically
+      if (parts.length > 0 && !state.current) {
+        state.current = parts[0].id
+      }
+
+      // Update the global model parts state
+      window.setTimeout(() => {
+        setModelParts(parts)
+      }, 100)
+    },
+    // Progress callback
+    (xhr) => {
+      console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`)
+    },
+    // Error callback
+    (error) => {
+      console.error("Error loading model:", error)
+      setLoadError(true)
+    },
+  )
+
+  // Apply colors to model parts
+  useEffect(() => {
+    if (!scene || loadError) return
+
+    // Apply colors to materials based on state
+    Object.entries(snap.items).forEach(([partId, color]) => {
+      scene.traverse((child) => {
+        if (child.isMesh && child.name === partId) {
+          if (child.material) {
+            child.material.color.set(color)
+          }
+        }
+      })
+    })
+  }, [scene, snap.items, loadError])
+
+  // Handle hover effect
+  useEffect(() => {
+    document.body.style.cursor = hovered ? "pointer" : "auto"
+  }, [hovered])
+
+  // Adjust camera on load
+  useEffect(() => {
+    if (scene && !loadError) {
+      // Center and fit the model in view
+      const box = new THREE.Box3().setFromObject(scene)
+      const size = box.getSize(new THREE.Vector3())
+      const center = box.getCenter(new THREE.Vector3())
+
+      const maxDim = Math.max(size.x, size.y, size.z)
+      const fov = camera.fov * (Math.PI / 180)
+      const cameraZ = Math.abs(maxDim / Math.sin(fov / 2))
+
+      // Set camera position
+      camera.position.set(center.x, center.y, center.z + cameraZ * 0.5)
+      camera.lookAt(center)
+      camera.updateProjectionMatrix()
+
+      // Apply standard material to all meshes
+      scene.traverse((child) => {
+        if (child.isMesh) {
+          // Create a simple standard material with minimal reflections
+          if (child.material) {
+            const color = child.material.color ? child.material.color.clone() : new THREE.Color(0xffffff)
+            child.material = new THREE.MeshStandardMaterial({
+              color: color,
+              roughness: 0.5, // Increased roughness for less complex reflections
+              metalness: 0.1, // Reduced metalness for simpler rendering
+              envMapIntensity: 0.5, // Reduced for less complex environment mapping
+            })
+          }
+        }
+      })
+    }
+  }, [scene, camera, loadError])
+
+  // Continuous animation for floating effect
+  useFrame((state) => {
+    floating.current = ref.current
+    if (floating.current) {
+      const t = state.clock.getElapsedTime()
+
+      // Apply floating motion
+      floating.current.position.y = Math.sin(t / 2) * 0.05
+
+      // Apply gentle rotation if not hovered
+      if (!hovered) {
+        floating.current.rotation.y = t * 0.1
+      }
+    }
+  })
+
+  if (loadError) {
+    return <FallbackModel />
+  }
+
+  return (
+    <group
+      ref={ref}
+      dispose={null}
+      onPointerOver={(e) => {
+        e.stopPropagation()
+        setHovered(e.object.name)
+      }}
+      onPointerOut={() => setHovered(null)}
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        if (e.object.name) {
+          state.current = e.object.name
+        }
+      }}
+    >
+      <primitive object={scene} scale={1.5} position={[0, 0, 0]} rotation={[0, Math.PI / 4, 0]} />
+    </group>
+  )
+}
+
+// Main component
 const ModelConfigurator = () => {
-  const { id } = useParams()
+  const { productType, productid } = useParams()
   const navigate = useNavigate()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -27,36 +320,65 @@ const ModelConfigurator = () => {
   const [quantity, setQuantity] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const [configurableBones, setConfigurableBones] = useState([])
+  const [modelUrl, setModelUrl] = useState(null)
+  const [canvasError, setCanvasError] = useState(false)
+  const [aromas, setAromas] = useState([])
+  const [selectedAroma, setSelectedAroma] = useState(null)
+  const [totalPrice, setTotalPrice] = useState(0)
+  const [modelParts, setModelParts] = useState([])
+  const snap = useSnapshot(state)
+
+  // Handle color change with debounce
+  const [debouncedColor, setDebouncedColor] = useState(null)
+
+  // Immediate color preview without affecting the 3D model
+  const handleColorPreview = (color) => {
+    setDebouncedColor(color)
+  }
+
+  // Debounced function that actually updates the 3D model
+  const handleColorChange = debounce((color) => {
+    if (state.current) {
+      state.items[state.current] = color
+    }
+  }, 100) // 100ms delay
+
+  // Effect to apply the debounced color
+  useEffect(() => {
+    if (debouncedColor && state.current) {
+      handleColorChange(debouncedColor)
+    }
+  }, [debouncedColor])
+
+  // Make setModelParts globally available for the ProductModel component
+  useEffect(() => {
+    window.setModelParts = setModelParts
+  }, [])
 
   // Fetch product data
   useEffect(() => {
     const fetchProductData = async () => {
       try {
         setLoading(true)
-        const data = await productService.getProductById(id)
+        const data = await productService.getProductById(productid)
         const transformedProduct = transformProduct(data)
 
-        if (transformedProduct.type !== "MAIN_PRODUCT") {
+        if (transformedProduct.type !== "MAIN_PRODUCT" && productType === "MAIN_PRODUCT") {
           // Redirect to regular product view if not a MAIN_PRODUCT
-          navigate(`/product/${id}`)
+          navigate(`/product-view/${productid}`)
           return
         }
 
         setProduct(transformedProduct)
 
-        // Initialize state.items with bone colors
-        if (transformedProduct.bones) {
-          const configBones = transformedProduct.bones.filter((bone) => bone.isConfiguration)
-          setConfigurableBones(configBones)
+        // Set the model URL - always use the consistent path structure
+        setModelUrl(`/src/assets/models/model${productid}.glb`)
 
-          // Initialize color state for each bone
-          const colorState = {}
-          configBones.forEach((bone) => {
-            colorState[bone.id] = bone.defDetail || "#ffffff"
-          })
-          state.items = colorState
-        }
+        // Calculate initial price
+        setTotalPrice(transformedProduct.price)
+
+        // Fetch aromas
+        fetchAromas()
 
         setLoading(false)
       } catch (err) {
@@ -67,7 +389,64 @@ const ModelConfigurator = () => {
     }
 
     fetchProductData()
-  }, [id, navigate])
+  }, [productid, productType, navigate])
+
+  // Update model parts when state.items changes
+  useEffect(() => {
+    const parts = Object.keys(state.items).map((id) => ({
+      id,
+      name: id.replace(/_/g, " ").replace(/\d+$/, "").trim() || `Part ${id}`,
+      color: state.items[id],
+    }))
+    setModelParts(parts)
+  }, [snap.items])
+
+  // Fetch aromas
+  const fetchAromas = async () => {
+    try {
+      // In a real app, you would fetch from your API
+      // For now, we'll use mock data
+      const mockAromas = [
+        { id: 1, name: "Lavender", description: "Calming lavender scent", price: 5.99 },
+        { id: 2, name: "Mint", description: "Refreshing mint aroma", price: 4.99 },
+        { id: 3, name: "Citrus", description: "Energizing citrus blend", price: 6.99 },
+        { id: 4, name: "Vanilla", description: "Soothing vanilla fragrance", price: 7.99 },
+      ]
+      setAromas(mockAromas)
+    } catch (err) {
+      console.error("Error fetching aromas:", err)
+    }
+  }
+
+  // Handle quantity change
+  const handleQuantityChange = (value) => {
+    const newQuantity = Math.max(1, Math.min(10, value))
+    setQuantity(newQuantity)
+    updateTotalPrice(newQuantity, selectedAroma)
+  }
+
+  // Handle aroma selection
+  const handleAromaSelect = (aroma) => {
+    setSelectedAroma(aroma)
+    updateTotalPrice(quantity, aroma)
+  }
+
+  // Update total price based on product, quantity, and aroma
+  const updateTotalPrice = (qty, aroma) => {
+    if (!product) return
+
+    let price = product.price
+    if (aroma) {
+      price += aroma.price
+    }
+
+    setTotalPrice(price * qty)
+  }
+
+  // Handle part selection
+  const handlePartSelect = (partId) => {
+    state.current = partId
+  }
 
   // Handle login
   const handleLogin = async (email, password) => {
@@ -96,12 +475,17 @@ const ModelConfigurator = () => {
     try {
       setAddingToCart(true)
 
+      // In a real app, you would:
+      // 1. Create a ModifiedBoneGroup with the customized bones
+      // 2. Create a CartItem with the product, aroma, and ModifiedBoneGroup
+
       // Prepare cart item data with bone configurations
       const cartItem = {
         productId: product.id,
         quantity,
-        price: product.price * quantity,
+        price: totalPrice,
         boneConfigurations: { ...state.items },
+        aromaId: selectedAroma?.id || null,
       }
 
       // TODO: Implement actual cart service call
@@ -125,23 +509,23 @@ const ModelConfigurator = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-black"></div>
+      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     )
   }
 
   if (error || !product) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-gray-100">
-        <div className="text-center max-w-md p-8 bg-white rounded-lg shadow-lg">
+      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+        <div className="text-center max-w-md p-8 bg-white/40 backdrop-blur-xl rounded-3xl shadow-lg border border-white/30">
           <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
           <p className="text-gray-600 mb-6">
             {error || "The product you're looking for doesn't exist or is no longer available."}
           </p>
           <button
             onClick={() => navigate(-1)}
-            className="inline-block bg-black text-white px-6 py-2 rounded hover:bg-gray-800"
+            className="inline-block bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800"
           >
             Go Back
           </button>
@@ -151,85 +535,205 @@ const ModelConfigurator = () => {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gray-100 relative overflow-hidden">
-      {/* Back button - positioned at top left */}
-      <button
-        onClick={() => navigate(-1)}
-        className="absolute top-6 left-6 z-10 flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-md hover:bg-gray-100"
-        aria-label="Go back"
-      >
-        <ArrowLeft size={20} />
-      </button>
+    <div className="h-screen w-full flex flex-col overflow-hidden relative">
+      {/* Dreamy gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-pink-200 via-purple-100 to-blue-200 z-0">
+        {/* Large circular elements */}
+        <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-gradient-to-r from-pink-300/40 to-purple-300/40 blur-3xl"></div>
+        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-r from-blue-300/40 to-purple-300/40 blur-3xl"></div>
+        <div className="absolute top-[30%] left-[20%] w-[30%] h-[30%] rounded-full bg-gradient-to-r from-pink-200/30 to-blue-200/30 blur-3xl"></div>
 
-      {/* Product title */}
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 bg-white px-6 py-2 rounded-full shadow-md">
-        <h1 className="text-lg font-bold">{product.name}</h1>
+        {/* Smaller circular highlights */}
+        <div className="absolute top-[15%] right-[25%] w-[15%] h-[15%] rounded-full bg-white/20 blur-2xl"></div>
+        <div className="absolute bottom-[20%] right-[10%] w-[10%] h-[10%] rounded-full bg-white/20 blur-2xl"></div>
       </div>
 
-      {/* Main 3D canvas */}
-      <div className="flex-1 relative">
-        <Canvas shadows camera={{ position: [0, 0, 4], fov: 50 }}>
-          <ambientLight intensity={0.7} />
-          <spotLight intensity={0.5} angle={0.1} penumbra={1} position={[10, 15, 10]} castShadow />
-
-          <Suspense fallback={null}>
-            <ProductModel url={`/src/assets/models/shop/${product.id}.glb`} bones={configurableBones} />
-            <Environment preset="city" />
-            <ContactShadows position={[0, -0.8, 0]} opacity={0.25} scale={10} blur={1.5} far={0.8} />
-            <OrbitControls
-              minPolarAngle={Math.PI / 6}
-              maxPolarAngle={Math.PI - Math.PI / 6}
-              enableZoom={true}
-              enablePan={false}
-            />
-          </Suspense>
-        </Canvas>
-      </div>
-
-      {/* Color picker */}
-      <ColorPicker />
-
-      {/* Add to cart button - positioned at bottom right */}
-      <button
-        onClick={handleAddToCart}
-        disabled={addingToCart}
-        className="absolute bottom-6 right-6 z-10 flex items-center justify-center bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-70 shadow-lg"
-      >
-        {addingToCart ? (
-          <span className="flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-            Adding...
-          </span>
-        ) : (
-          <span className="flex items-center">
-            <ShoppingCart size={18} className="mr-2" />
-            Add to Cart
-          </span>
-        )}
-      </button>
-
-      {/* Bone selector - positioned at bottom left */}
-      <div className="absolute bottom-6 left-6 z-10 bg-white p-4 rounded-lg shadow-lg max-w-xs">
-        <div className="flex items-center mb-2">
-          <Palette size={16} className="mr-2" />
-          <h3 className="text-sm font-medium">Select a part to customize</h3>
+      {/* Main content container with glassmorphism effect */}
+      <div className="absolute inset-4 rounded-[32px] overflow-hidden border border-white/40 backdrop-blur-xl bg-white/15 shadow-xl z-10">
+        {/* Header with back button */}
+        <div className="absolute top-4 left-4 z-30 flex items-center">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-black glass-button px-4 py-2 rounded-full"
+          >
+            <ArrowLeft size={18} className="mr-2" />
+            <span>Back</span>
+          </button>
         </div>
-        <div className="space-y-2 max-h-40 overflow-y-auto">
-          {configurableBones.map((bone) => (
-            <button
-              key={bone.id}
-              onClick={() => (state.current = bone.id)}
-              className={`w-full flex items-center justify-between p-2 rounded-md text-sm ${
-                state.current === bone.id ? "bg-gray-200" : "hover:bg-gray-100"
-              }`}
-            >
-              <span>{bone.name}</span>
-              <div
-                className="w-5 h-5 rounded-full border border-gray-300"
-                style={{ backgroundColor: state.items[bone.id] || "#ffffff" }}
+
+        {/* 3D Canvas */}
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="w-[60%] h-[70%] rounded-2xl overflow-hidden">
+            {canvasError ? (
+              <div className="w-full h-full flex items-center justify-center bg-white/60 backdrop-blur-md">
+                <div className="text-center p-8">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+                  <p className="text-gray-700 font-medium">3D Rendering Error</p>
+                  <p className="text-gray-500 mt-2">There was a problem rendering the 3D model.</p>
+                </div>
+              </div>
+            ) : (
+              <ErrorBoundary
+                fallback={
+                  <div className="w-full h-full flex items-center justify-center bg-white/60 backdrop-blur-md">
+                    <div className="text-center p-8">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-4 text-amber-500" />
+                      <p className="text-gray-700 font-medium">3D Model Error</p>
+                      <p className="text-gray-500 mt-2">Using fallback display</p>
+                    </div>
+                  </div>
+                }
+              >
+                <Canvas
+                  shadows
+                  camera={{ position: [0, 0, 4], fov: 50 }}
+                  onError={(e) => {
+                    console.error("Canvas error:", e)
+                    setCanvasError(true)
+                  }}
+                >
+                  <ambientLight intensity={0.6} />
+                  <spotLight intensity={0.4} angle={0.1} penumbra={1} position={[10, 15, 10]} castShadow />
+
+                  <Suspense fallback={<FallbackModel />}>
+                    <ProductModel url={modelUrl} />
+                    <Environment preset="dawn" background={false} resolution={128} />
+                    <ContactShadows
+                      position={[0, -0.8, 0]}
+                      opacity={0.2}
+                      scale={8}
+                      blur={1.5}
+                      far={0.8}
+                      resolution={256}
+                    />
+                    <OrbitControls
+                      minPolarAngle={Math.PI / 6}
+                      maxPolarAngle={Math.PI - Math.PI / 6}
+                      enableZoom={true}
+                      enablePan={false}
+                    />
+                  </Suspense>
+                </Canvas>
+              </ErrorBoundary>
+            )}
+          </div>
+        </div>
+
+        {/* Left sidebar - Customization controls */}
+        <div className="absolute top-20 left-6 w-[230px] glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg z-20">
+          <h2 className="text-[#0c9df8] text-lg font-medium mb-1">Customize</h2>
+          <p className="text-gray-700 text-sm mb-4">Choose the colors for different parts of your product</p>
+
+          {/* Part selection */}
+          <div className="mb-4">
+            <h3 className="text-sm text-gray-600 mb-2">Select a part to customize</h3>
+            <div className="space-y-2">
+              {modelParts.map((part) => (
+                <button
+                  key={part.id}
+                  onClick={() => handlePartSelect(part.id)}
+                  className="w-full flex items-center justify-between p-2 text-sm text-gray-700"
+                >
+                  <span>{part.name}</span>
+                  <div className={`w-4 h-4 rounded-full ${snap.current === part.id ? "bg-red-500" : "bg-gray-200"}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color picker */}
+          {snap.current && (
+            <div>
+              <h3 className="text-sm text-gray-600 mb-2">Color for Part</h3>
+              <HexColorPicker
+                color={debouncedColor || snap.items[snap.current]}
+                onChange={handleColorPreview}
+                className="w-full"
               />
-            </button>
-          ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right sidebar - Product details */}
+        <div className="absolute top-20 right-6 w-[230px] z-20">
+          <div className="glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg mb-4">
+            <h1 className="text-lg font-bold uppercase mb-1">{product.name}</h1>
+            <p className="text-lg font-bold mb-4">{totalPrice.toFixed(2)} B</p>
+
+            {/* Description */}
+            <div className="mb-4">
+              <h2 className="text-xs font-medium mb-1">Description</h2>
+              <p className="text-gray-700 text-xs">
+                {product.description ||
+                  "Our flagship inhaler with customizable features, sleek design with maximum efficiency"}
+              </p>
+            </div>
+
+            {/* Aroma selection */}
+            {aromas.length > 0 && (
+              <div className="mb-4">
+                <h2 className="text-xs font-medium mb-2">Select Aroma</h2>
+                <div className="space-y-1">
+                  {aromas.map((aroma) => (
+                    <button
+                      key={aroma.id}
+                      onClick={() => handleAromaSelect(aroma)}
+                      className={`w-full flex items-center justify-between p-2 rounded-md text-xs ${
+                        selectedAroma?.id === aroma.id
+                          ? "bg-blue-50/50 text-[#0c9df8]"
+                          : "hover:bg-white/30 text-gray-700"
+                      }`}
+                    >
+                      <span>{aroma.name}</span>
+                      <span className="text-xs">{aroma.price.toFixed(2)} B</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quantity selector */}
+            <div>
+              <p className="text-xs font-medium mb-2">Quantity</p>
+              <div className="flex items-center">
+                <button
+                  onClick={() => handleQuantityChange(quantity - 1)}
+                  disabled={quantity <= 1}
+                  className="w-8 h-8 flex items-center justify-center border border-white/50 bg-white/20 rounded-l-full disabled:opacity-50"
+                >
+                  <Minus size={14} />
+                </button>
+                <div className="w-10 h-8 flex items-center justify-center border-t border-b border-white/50 bg-white/20">
+                  {quantity}
+                </div>
+                <button
+                  onClick={() => handleQuantityChange(quantity + 1)}
+                  disabled={quantity >= 10}
+                  className="w-8 h-8 flex items-center justify-center border border-white/50 bg-white/20 rounded-r-full disabled:opacity-50"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Add to cart button - separate from product details */}
+          <button
+            onClick={handleAddToCart}
+            disabled={addingToCart}
+            className="w-full glass-button bg-gradient-to-r from-pink-400/80 to-purple-500/80 text-white py-3 rounded-full hover:opacity-90 transition-all disabled:opacity-70 flex items-center justify-center shadow-lg border border-white/30 group"
+          >
+            {addingToCart ? (
+              <span className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Adding...
+              </span>
+            ) : (
+              <span className="flex items-center font-medium group-hover:scale-105 text-white">
+                ADD TO CART <ShoppingCart size={18} className="ml-2" />
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -240,73 +744,6 @@ const ModelConfigurator = () => {
         onLogin={handleLogin}
         redirectPath="/starter"
       />
-    </div>
-  )
-}
-
-// 3D Model component
-function ProductModel({ url, bones }) {
-  const ref = useRef()
-  const snap = useSnapshot(state)
-  const { scene, nodes, materials } = useGLTF(url)
-  const [hovered, setHovered] = useState(null)
-
-  // Apply bone colors to model
-  useEffect(() => {
-    if (!scene) return
-
-    // Apply colors to materials based on state
-    Object.entries(snap.items).forEach(([boneId, color]) => {
-      // Find the mesh corresponding to this bone
-      scene.traverse((child) => {
-        if (child.isMesh && child.name.includes(boneId)) {
-          if (child.material) {
-            child.material.color.set(color)
-          }
-        }
-      })
-    })
-  }, [scene, snap.items])
-
-  // Handle hover effect
-  useEffect(() => {
-    document.body.style.cursor = hovered ? "pointer" : "auto"
-  }, [hovered])
-
-  return (
-    <group
-      ref={ref}
-      dispose={null}
-      onPointerOver={(e) => {
-        e.stopPropagation()
-        // Check if the mesh corresponds to a configurable bone
-        const boneId = bones.find((bone) => e.object.name.includes(bone.id))?.id
-        if (boneId) setHovered(boneId)
-      }}
-      onPointerOut={() => setHovered(null)}
-      onPointerDown={(e) => {
-        e.stopPropagation()
-        // Check if the mesh corresponds to a configurable bone
-        const boneId = bones.find((bone) => e.object.name.includes(bone.id))?.id
-        if (boneId) state.current = boneId
-      }}
-    >
-      <primitive object={scene} scale={1.5} position={[0, -1, 0]} rotation={[0, Math.PI / 4, 0]} />
-    </group>
-  )
-}
-
-// Color picker component
-function ColorPicker() {
-  const snap = useSnapshot(state)
-
-  if (!snap.current) return null
-
-  return (
-    <div className="absolute right-6 top-20 z-10 bg-white p-4 rounded-lg shadow-lg">
-      <h3 className="text-sm font-medium mb-2">Customize: {snap.current}</h3>
-      <HexColorPicker color={snap.items[snap.current]} onChange={(color) => (state.items[snap.current] = color)} />
-      <div className="mt-2 text-xs text-gray-500">Click on different parts of the model to customize</div>
     </div>
   )
 }
