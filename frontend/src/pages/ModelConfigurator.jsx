@@ -671,39 +671,45 @@ const ModelConfigurator = () => {
           </div>
         </div>
 
-        {/* Left sidebar - Customization controls */}
-        <div className="absolute top-20 left-6 w-[230px] glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg z-20">
-          <h2 className="text-[#0c9df8] text-lg font-medium mb-1">Customize</h2>
-          <p className="text-gray-700 text-sm mb-4">Choose the colors for different parts of your product</p>
+        {/* Left sidebar - Customization controls and Aromas */}
+        <div className="absolute top-20 left-6 w-[230px] z-20 space-y-4">
+          {/* Customization panel */}
+          <div className="glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg">
+            <h2 className="text-[#0c9df8] text-lg font-medium mb-1">Customize</h2>
+            <p className="text-gray-700 text-sm mb-4">Choose the colors for different parts of your product</p>
 
-          {/* Part selection */}
-          <div className="mb-4">
-            <h3 className="text-sm text-gray-600 mb-2">Select a part to customize</h3>
-            <div className="space-y-2">
-              {modelParts.map((part) => (
-                <button
-                  key={part.id}
-                  onClick={() => handlePartSelect(part.id)}
-                  className="w-full flex items-center justify-between p-2 text-sm text-gray-700"
-                >
-                  <span>{part.name}</span>
-                  <div className={`w-4 h-4 rounded-full ${snap.current === part.id ? "bg-red-500" : "bg-gray-200"}`} />
-                </button>
-              ))}
+            {/* Part selection */}
+            <div className="mb-4">
+              <h3 className="text-sm text-gray-600 mb-2">Select a part to customize</h3>
+              <div className="space-y-2">
+                {modelParts.map((part) => (
+                  <button
+                    key={part.id}
+                    onClick={() => handlePartSelect(part.id)}
+                    className="w-full flex items-center justify-between p-2 text-sm text-gray-700"
+                  >
+                    <span>{part.name}</span>
+                    <div
+                      className={`w-4 h-4 rounded-full ${snap.current === part.id ? "bg-red-500" : "bg-gray-200"}`}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Color picker */}
+            {snap.current && (
+              <div>
+                <h3 className="text-sm text-gray-600 mb-2">Color for Part</h3>
+                <HexColorPicker
+                  color={debouncedColor || snap.items[snap.current]}
+                  onChange={handleColorPreview}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Color picker */}
-          {snap.current && (
-            <div>
-              <h3 className="text-sm text-gray-600 mb-2">Color for Part</h3>
-              <HexColorPicker
-                color={debouncedColor || snap.items[snap.current]}
-                onChange={handleColorPreview}
-                className="w-full"
-              />
-            </div>
-          )}
         </div>
 
         {/* Right sidebar - Product details */}
@@ -720,29 +726,6 @@ const ModelConfigurator = () => {
                   "Our flagship inhaler with customizable features, sleek design with maximum efficiency"}
               </p>
             </div>
-
-            {/* Aroma selection */}
-            {aromas.length > 0 && (
-              <div className="mb-4">
-                <h2 className="text-xs font-medium mb-2">Select Aroma</h2>
-                <div className="space-y-1">
-                  {aromas.map((aroma) => (
-                    <button
-                      key={aroma.id}
-                      onClick={() => handleAromaSelect(aroma)}
-                      className={`w-full flex items-center justify-between p-2 rounded-md text-xs ${
-                        selectedAroma?.id === aroma.id
-                          ? "bg-blue-50/50 text-[#0c9df8]"
-                          : "hover:bg-white/30 text-gray-700"
-                      }`}
-                    >
-                      <span>{aroma.name}</span>
-                      <span className="text-xs">{aroma.price.toFixed(2)} B</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Quantity selector */}
             <div>
@@ -768,6 +751,34 @@ const ModelConfigurator = () => {
               </div>
             </div>
           </div>
+
+          {/* Aroma selection panel - Moved from right sidebar */}
+          {aromas.length > 0 && (
+            <div className="glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg">
+              <h2 className="text-[#0c9df8] text-lg font-medium mb-1">Aromas</h2>
+              <p className="text-gray-700 text-sm mb-4">Select a scent for your product</p>
+
+              <div className="space-y-2">
+                {aromas.map((aroma) => (
+                  <button
+                    key={aroma.id}
+                    onClick={() => handleAromaSelect(aroma)}
+                    className={`w-full flex items-center justify-between p-2 rounded-md text-sm ${
+                      selectedAroma?.id === aroma.id
+                        ? "bg-blue-50/50 text-[#0c9df8]"
+                        : "hover:bg-white/30 text-gray-700"
+                    }`}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{aroma.name}</span>
+                      <span className="text-xs text-gray-500">{aroma.description}</span>
+                    </div>
+                    <span className="text-xs font-medium">{aroma.price.toFixed(2)} B</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Add to cart button - separate from product details */}
           <button
@@ -803,7 +814,6 @@ const ModelConfigurator = () => {
     </div>
   )
 }
-
 
 export default ModelConfigurator
 

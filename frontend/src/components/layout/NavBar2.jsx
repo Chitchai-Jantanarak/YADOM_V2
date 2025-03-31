@@ -462,7 +462,7 @@ const NavBar2 = () => {
 
                           {/* Help & Support */}
                           <Link
-                            to="/help"
+                            to="/contact"
                             className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >

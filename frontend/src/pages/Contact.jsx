@@ -1,6 +1,8 @@
 import React from 'react';
 import NavBar2 from "../components/layout/NavBar2";
 import Footer from "../components/layout/Footer";
+import PageTransition from '../components/layout/PageTransition';
+
 import Hero from "../assets/images/Contact/Hero.png";
 
 const Contact = () => {
@@ -43,9 +45,9 @@ const Contact = () => {
         
         </div>
       </div>
-        <Footer />
+      <Footer />
     </>
   );
 };
 
-export default Contact;
+export default PageTransition(Contact);
