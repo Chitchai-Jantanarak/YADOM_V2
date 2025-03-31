@@ -34,7 +34,13 @@ api.interceptors.response.use(
       // Unauthorized - could redirect to login
       if (error.response.status === 401) {
         console.error("Unauthorized access")
-        // You could dispatch an action or redirect here
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+
+        sessionStorage.setItem("recentlyLoggedOut", "true")
+        if (!window.location.pathname.includes("/login")) {
+          window.location.href = "/login"
+        }
       }
 
       // Server error

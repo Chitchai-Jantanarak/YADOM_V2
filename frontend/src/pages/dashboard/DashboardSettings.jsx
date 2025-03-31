@@ -33,6 +33,12 @@ const DashboardSettings = () => {
   const [imagePreview, setImagePreview] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [imageError, setImageError] = useState("")
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
+
+  const refreshPage = () => {
+    window.location.reload()
+  }
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -114,6 +120,7 @@ const DashboardSettings = () => {
     const error = validateImageFile(file)
     if (error) {
       setImageError(error)
+      setShowErrorModal(true)
       return
     }
 
@@ -135,40 +142,52 @@ const DashboardSettings = () => {
       const formData = new FormData()
       formData.append("file", file)
 
-      // Upload directly to the new endpoint
+      // Upload directly to the existing endpoint
       const response = await api.post("/api/upload/profile-image", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
 
+      // Get the image URL from the response
+      const imageUrl = response.data.url
+      console.log("Uploaded image URL:", imageUrl)
+
       // Update user state with new image URL
-      setUser((prevUser) => ({
-        ...prevUser,
-        imageUrl: response.data.url,
-      }))
+      const updatedUser = {
+        ...user,
+        imageUrl: imageUrl,
+      }
+
+      setUser(updatedUser)
 
       // Update local storage user data
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
       if (storedUser && storedUser.id) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            ...storedUser,
-            imageUrl: response.data.url,
+        const updatedStoredUser = {
+          ...storedUser,
+          imageUrl: imageUrl,
+        }
+
+        localStorage.setItem("user", JSON.stringify(updatedStoredUser))
+
+        // Dispatch a storage event to notify other components
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "user",
+            newValue: JSON.stringify(updatedStoredUser),
+            oldValue: JSON.stringify(storedUser),
+            storageArea: localStorage,
           }),
         )
       }
 
       setSuccess("Profile image updated successfully!")
-
-      // Clear after 3 seconds
-      setTimeout(() => {
-        setSuccess("")
-      }, 3000)
+      setShowSuccessModal(true)
     } catch (err) {
       console.error("Error uploading image:", err)
       setImageError(err.response?.data?.message || "Failed to upload image. Please try again.")
+      setShowErrorModal(true)
     } finally {
       setUploadingImage(false)
     }
@@ -193,6 +212,7 @@ const DashboardSettings = () => {
       const updatedUser = await userService.updateProfile(userData)
 
       setSuccess("Profile updated successfully!")
+      setShowSuccessModal(true)
       setUser(updatedUser)
 
       // Update localStorage if needed
@@ -208,6 +228,7 @@ const DashboardSettings = () => {
     } catch (err) {
       console.error("Error updating profile:", err)
       setError(err.response?.data?.message || "Failed to update profile. Please try again.")
+      setShowErrorModal(true)
     } finally {
       setSaving(false)
     }
@@ -263,19 +284,7 @@ const DashboardSettings = () => {
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Account Settings</h1>
 
-          {error && (
-            <div className="alert alert-error mb-6" role="alert">
-              <AlertCircle className="h-5 w-5" aria-hidden="true" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="alert alert-success mb-6" role="alert">
-              <Check className="h-5 w-5" aria-hidden="true" />
-              <span>{success}</span>
-            </div>
-          )}
+          {/* Success and error alerts are now handled by modals */}
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Profile Section */}
@@ -301,7 +310,21 @@ const DashboardSettings = () => {
                         alt={`${user?.name || "User"}'s profile`}
                         className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
                         onError={(e) => {
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=random`
+                          console.log("Image preview error:", e.target.src)
+                          e.target.onerror = null // Prevent infinite loop
+
+                          // If the preview fails, try to use the user's image URL
+                          if (user?.imageUrl) {
+                            const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000"
+                            const imageUrl = user.imageUrl.startsWith("http")
+                              ? user.imageUrl
+                              : `${apiBaseUrl}${user.imageUrl.startsWith("/") ? "" : "/"}${user.imageUrl}`
+
+                            e.target.src = imageUrl
+                          } else {
+                            // Fall back to UI avatars
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=random`
+                          }
                         }}
                       />
                     ) : (
@@ -508,6 +531,41 @@ const DashboardSettings = () => {
           </form>
         </div>
       </div>
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full shadow-xl">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <Check className="h-8 w-8 text-green-600" aria-hidden="true" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Success!</h3>
+              <p className="mb-6">{success}</p>
+              <button className="btn btn-primary w-full" onClick={refreshPage}>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full shadow-xl">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="h-8 w-8 text-red-600" aria-hidden="true" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Error</h3>
+              <p className="mb-6">{error}</p>
+              <button className="btn btn-error w-full" onClick={() => setShowErrorModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   )
 }

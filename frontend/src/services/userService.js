@@ -1,5 +1,6 @@
 import api from "./api"
 import imageService from "./imageService"
+import { updateCurrentUser } from "./authService"
 
 export const register = async (userData) => {
   const response = await api.post("/api/users/register", userData)
@@ -59,6 +60,16 @@ export const uploadProfileImage = async (imageFile) => {
         imageUrl: result.url,
       }
       localStorage.setItem("user", JSON.stringify(updatedStoredUser))
+
+      // Dispatch a storage event to notify other components
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "user",
+          newValue: JSON.stringify(updatedStoredUser),
+          oldValue: JSON.stringify(storedUser),
+          storageArea: localStorage,
+        }),
+      )
     }
 
     return response.data
@@ -72,24 +83,16 @@ export const updateProfile = async (userData) => {
   try {
     const response = await api.put("/api/users/profile", userData)
 
-    // Update stored user data if available
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}")
-    if (storedUser && storedUser.id) {
-      const updatedStoredUser = {
-        ...storedUser,
-        name: userData.name,
-        email: userData.email,
-        imageUrl: userData.imageUrl || storedUser.imageUrl,
-      }
-      localStorage.setItem("user", JSON.stringify(updatedStoredUser))
-    }
+    // Update the user data in localStorage using the imported function
+    updateCurrentUser(response.data)
 
     return response.data
   } catch (error) {
-    console.error("Error updating user profile:", error)
+    console.error("Error updating profile:", error)
     throw error
   }
 }
+
 // Request password reset
 export const forgotPassword = async (email) => {
   try {
@@ -188,3 +191,4 @@ export const deleteUser = async (userId) => {
     throw error
   }
 }
+

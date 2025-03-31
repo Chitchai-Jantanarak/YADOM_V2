@@ -26,6 +26,42 @@ export const hasRole = (user, requiredRoles) => {
   return user.role === requiredRoles
 }
 
+// Get current user from localStorage - helper function
+export const getCurrentUser = () => {
+  if (typeof window === "undefined") return null
+  const user = localStorage.getItem("user")
+  return user ? JSON.parse(user) : null
+}
+
+// Update current user in localStorage
+export const updateCurrentUser = (userData) => {
+  const currentUser = getCurrentUser()
+
+  if (currentUser && currentUser.id && userData) {
+    const updatedUser = { ...currentUser, ...userData }
+    localStorage.setItem("user", JSON.stringify(updatedUser))
+
+    // Dispatch a storage event to notify other components
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "user",
+        newValue: JSON.stringify(updatedUser),
+        oldValue: JSON.stringify(currentUser),
+        storageArea: localStorage,
+      }),
+    )
+
+    return updatedUser
+  }
+
+  return currentUser
+}
+
+export const isAuthenticated = () => {
+  if (typeof window === "undefined") return false
+  return !!localStorage.getItem("token")
+}
+
 export const authService = {
   // Register a new user
   register: async (userData) => {
@@ -87,17 +123,13 @@ export const authService = {
   },
 
   // Get current user from localStorage
-  getCurrentUser: () => {
-    if (typeof window === "undefined") return null
-    const user = localStorage.getItem("user")
-    return user ? JSON.parse(user) : null
-  },
+  getCurrentUser,
+
+  // Update current user in localStorage
+  updateCurrentUser,
 
   // Check if user is authenticated
-  isAuthenticated: () => {
-    if (typeof window === "undefined") return false
-    return !!localStorage.getItem("token")
-  },
+  isAuthenticated,
 
   // Get user profile
   getProfile: async () => {
@@ -121,7 +153,6 @@ export const authService = {
     }
   },
 
-  // Request password reset
   // Request password reset
   forgotPassword: async (email) => {
     try {
@@ -161,8 +192,4 @@ export const authService = {
     return hasRole(user, requiredRoles)
   },
 }
-
-// For backward compatibility
-export const getCurrentUser = authService.getCurrentUser
-export const isAuthenticated = authService.isAuthenticated
 

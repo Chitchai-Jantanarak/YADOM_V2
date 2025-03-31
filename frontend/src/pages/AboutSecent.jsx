@@ -158,26 +158,8 @@ const AboutSecent = () => {
         {/* Only render the modal if modalReady is true */}
         {modalReady && <CategoryModal category={selectedCategory} onClose={closeModal} />}
 
-        <div className="my-12">
-          <TextCarousel
-            text={["REFRESHING AROMAS", "GET BOOSTED", "DON'T FEEL BAD, FEEL THE STYLE"]}
-            colorIndex={[2, 1, 3]}
-            baseVelocity={5}
-            className="font-anybody"
-          />
-        </div>
-
-        <div className="my-4">
-          <TextCarousel
-            text={["REFRESHING AROMAS", "GET BOOSTED", "DON'T FEEL BAD, FEEL THE STYLE"]}
-            colorIndex={[2, 1, 3]}
-            baseVelocity={-5}
-            className="font-anybody"
-          />
-        </div>
       </div>
-
-      <Footer />
+      <Footer carousel={"true"} />
     </div>
   )
 }

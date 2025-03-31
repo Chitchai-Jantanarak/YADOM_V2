@@ -23,7 +23,7 @@ const imageService = {
       const formData = new FormData()
       formData.append("file", file)
 
-      // Change this line to use the correct endpoint
+      // Use the existing endpoint
       const response = await api.post("/api/upload/profile-image", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -64,7 +64,11 @@ const imageService = {
     }
   },
 
-  // Also update the uploadFromUrl function if you're using it
+  /**
+   * Upload an image from a URL
+   * @param {string} url - The URL of the image to upload
+   * @returns {Promise<Object>} - Response with URL and success status
+   */
   uploadFromUrl: async (url) => {
     try {
       if (!url) {
@@ -74,7 +78,7 @@ const imageService = {
       const formData = new FormData()
       formData.append("url", url)
 
-      // Change this line to use the correct endpoint
+      // Use the existing endpoint
       const response = await api.post("/api/upload/profile-image", formData)
 
       return {
@@ -82,7 +86,7 @@ const imageService = {
         url: response.data.url,
       }
     } catch (error) {
-      console.error("Error uploading image from URL:", error)
+      console.error("Error uploading image from URL: ", error)
       return {
         success: false,
         error: error.response?.data?.message || error.message || "Failed to upload image from URL",
