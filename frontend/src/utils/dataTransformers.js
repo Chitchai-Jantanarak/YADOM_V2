@@ -32,3 +32,24 @@ export const transformProducts = (products) => {
   return products.map(transformProduct)
 }
 
+const getColorNameFromCode = (colorCode) => {
+  if (!colorCode) return "Unknown"
+
+  // Common color codes to names mapping
+  const commonColors = {
+    "#000000": "Black",
+    "#FFFFFF": "White",
+    "#FF0000": "Red",
+    "#00FF00": "Green",
+    "#0000FF": "Blue",
+    "#FFFF00": "Yellow",
+    "#FFC0CB": "Pink",
+    "#FFA500": "Orange",
+    "#800080": "Purple",
+    "#A52A2A": "Brown",
+    "#808080": "Gray",
+  }
+
+  return commonColors[colorCode.toUpperCase()] || "Color"
+}
+

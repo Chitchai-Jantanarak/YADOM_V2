@@ -92,6 +92,7 @@ model ProductColor {
   id                  Int                 @id @default(autoincrement())
   colorCode           String              // Hex code e.g., "#FF5733"
   colorName           String?             // Optional name e.g., "Red"
+  CartItem            CartItem[]
   
   // Relation to Product
   product             Product             @relation(fields: [productId], references: [id])
@@ -184,6 +185,7 @@ model CartItem {
   userId              Int
   modifiedBoneGroupId Int?                
   orderId             Int?
+  productColorId      Int?                // New field for selected color
   price               Float               // Computed price of the CartItem { (product + aroma) * quantity + delivery }
   quantity            Int                 @default(1)
   isUsed              Boolean             @default(true) // Easier for mark used 
@@ -193,6 +195,7 @@ model CartItem {
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   modifiedBoneGroup   ModifiedBoneGroup?  @relation(fields: [modifiedBoneGroupId], references: [id], onDelete: SetNull) 
   order               Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  productColor        ProductColor?       @relation(fields: [productColorId], references: [id], onDelete: SetNull)
 
   createdAt           DateTime            @default(now()) @map("created_at")
   updatedAt           DateTime            @updatedAt @map("updated_at")

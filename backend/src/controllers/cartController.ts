@@ -7,7 +7,16 @@ import { ApiError } from "../middleware/errorMiddleware.js"
 // @access  Public/Private
 export const addToCart = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { productId, aromaId, userId, modifiedBoneGroupId, quantity } = req.body
+    const {
+      productId,
+      aromaId,
+      userId,
+      modifiedBoneGroupId,
+      quantity,
+      productColorId,
+      selectedColor, // For backward compatibility
+      price,
+    } = req.body
 
     // If user is authenticated, use their ID, otherwise use the provided one
     const actualUserId = req.user ? req.user.id : userId
@@ -23,28 +32,52 @@ export const addToCart = async (req: Request, res: Response, next: NextFunction)
     // Check if product exists
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        colors: true, // Include colors to handle selectedColor if needed
+      },
     })
 
     if (!product) {
       return next(ApiError.notFound("Product not found"))
     }
 
-    // Calculate price
-    let price = product.price
+    // Calculate price if not provided
+    let finalPrice = price
+    if (!finalPrice) {
+      let basePrice = product.price
 
-    // Add aroma price if applicable
-    if (aromaId) {
-      const aroma = await prisma.aroma.findUnique({
-        where: { id: aromaId },
-      })
+      // Add aroma price if applicable
+      if (aromaId) {
+        const aroma = await prisma.aroma.findUnique({
+          where: { id: aromaId },
+        })
 
-      if (aroma) {
-        price += aroma.price
+        if (aroma) {
+          basePrice += aroma.price
+        }
       }
+
+      // Multiply by quantity
+      finalPrice = basePrice * (quantity || 1)
     }
 
-    // Multiply by quantity
-    price *= quantity || 1
+    // Handle color selection
+    let finalProductColorId = productColorId
+
+    // For backward compatibility: if productColorId is not provided but selectedColor is
+    if (!finalProductColorId && selectedColor && product.type === "ACCESSORY") {
+      // If selectedColor is a string (color code), try to find the matching ProductColor
+      if (typeof selectedColor === "string" && product.colors && product.colors.length > 0) {
+        const matchingColor = product.colors.find((c) => c.colorCode === selectedColor)
+        if (matchingColor) {
+          finalProductColorId = matchingColor.id
+        }
+      }
+      // If selectedColor is a number, assume it's already a ProductColor ID
+      else if (typeof selectedColor === "number") {
+        finalProductColorId = selectedColor
+      }
+    }
 
     // Create cart item
     const cartItem = await prisma.cartItem.create({
@@ -53,7 +86,8 @@ export const addToCart = async (req: Request, res: Response, next: NextFunction)
         aromaId: aromaId || null,
         userId: actualUserId,
         modifiedBoneGroupId: modifiedBoneGroupId || null,
-        price,
+        productColorId: finalProductColorId || null,
+        price: finalPrice,
         quantity: quantity || 1,
         isUsed: true,
       },
@@ -65,6 +99,7 @@ export const addToCart = async (req: Request, res: Response, next: NextFunction)
       include: {
         product: true,
         aroma: true,
+        productColor: true,
         modifiedBoneGroup: {
           include: {
             modifiedBones: {
@@ -100,6 +135,7 @@ export const getCart = async (req: Request, res: Response, next: NextFunction) =
       include: {
         product: true,
         aroma: true,
+        productColor: true, // Include the productColor relation
         modifiedBoneGroup: {
           include: {
             modifiedBones: {
@@ -130,7 +166,7 @@ export const getCart = async (req: Request, res: Response, next: NextFunction) =
 export const updateCartItem = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params
-    const { quantity } = req.body
+    const { quantity, productColorId } = req.body
 
     if (!quantity || quantity < 1) {
       return next(ApiError.badRequest("Quantity must be at least 1"))
@@ -170,10 +206,12 @@ export const updateCartItem = async (req: Request, res: Response, next: NextFunc
       data: {
         quantity,
         price,
+        productColorId: productColorId !== undefined ? productColorId : undefined,
       },
       include: {
         product: true,
         aroma: true,
+        productColor: true, // Include the productColor relation
         modifiedBoneGroup: {
           include: {
             modifiedBones: {

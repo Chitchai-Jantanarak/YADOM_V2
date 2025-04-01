@@ -429,3 +429,34 @@ export const getAvailableProducts = async (req: Request, res: Response, next: Ne
   }
 }
 
+// @desc    Get bones for a product
+// @route   GET /api/products/:id/bones
+// @access  Public
+export const getBonesByProductId = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params
+
+    const product = await prisma.product.findUnique({
+      where: {
+        id: Number.parseInt(id),
+        deletedAt: null,
+      },
+      include: {
+        bones: {
+          include: {
+            text: true,
+          },
+        },
+      },
+    })
+
+    if (!product) {
+      return next(ApiError.notFound("Product not found"))
+    }
+
+    res.json(product.bones)
+  } catch (error) {
+    next(error)
+  }
+}
+

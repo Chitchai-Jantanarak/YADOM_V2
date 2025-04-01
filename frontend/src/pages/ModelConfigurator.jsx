@@ -2,15 +2,20 @@
 
 import { useState, useEffect, useRef, Suspense } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ShoppingCart, ArrowLeft, Minus, Plus, AlertCircle, Laptop, X } from "lucide-react"
+import { ArrowLeft, AlertCircle, Laptop, X } from "lucide-react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { OrbitControls, useGLTF, ContactShadows, Environment } from "@react-three/drei"
 import { HexColorPicker } from "react-colorful"
 import { proxy, useSnapshot } from "valtio"
 import { productService } from "../services/productService"
 import { transformProduct } from "../utils/dataTransformers"
-import { isAuthenticated, authService } from "../services/authService"
+import { authService } from "../services/authService"
+import { addToCart } from "../services/cartService"
 import LoginModal from "../components/ui/LoginModal"
+import NotificationModal from "../components/ui/NotificationModal"
+import AromaSelector from "../components/ui/AromaSelector"
+import ProductQuantity from "../components/ui/ProductQuantity"
+import CartHandler from "../components/ui/CartHandler"
 import * as THREE from "three"
 import React from "react"
 import { useMobile } from "../hooks/useMobile.js"
@@ -357,11 +362,20 @@ const ModelConfigurator = () => {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [modelUrl, setModelUrl] = useState(null)
   const [canvasError, setCanvasError] = useState(false)
-  const [aromas, setAromas] = useState([])
   const [selectedAroma, setSelectedAroma] = useState(null)
   const [totalPrice, setTotalPrice] = useState(0)
   const [modelParts, setModelParts] = useState([])
   const snap = useSnapshot(state)
+  const [productBones, setProductBones] = useState([])
+
+  // Notification modal state
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
+  const [notificationConfig, setNotificationConfig] = useState({
+    title: "",
+    message: "",
+    type: "success",
+    actionButton: null,
+  })
 
   // Mobile detection
   const isMobile = useMobile()
@@ -423,8 +437,11 @@ const ModelConfigurator = () => {
         // Calculate initial price
         setTotalPrice(transformedProduct.price)
 
-        // Fetch aromas
-        fetchAromas()
+        // Extract bones from the product data
+        if (data.bones && data.bones.length > 0) {
+          setProductBones(data.bones)
+          console.log("Product bones:", data.bones)
+        }
 
         setLoading(false)
       } catch (err) {
@@ -446,30 +463,6 @@ const ModelConfigurator = () => {
     }))
     setModelParts(parts)
   }, [snap.items])
-
-  // Fetch aromas
-  const fetchAromas = async () => {
-    try {
-      // In a real app, you would fetch from your API
-      // For now, we'll use mock data
-      const mockAromas = [
-        { id: 1, name: "Lavender", description: "Calming lavender scent", price: 5.99 },
-        { id: 2, name: "Mint", description: "Refreshing mint aroma", price: 4.99 },
-        { id: 3, name: "Citrus", description: "Energizing citrus blend", price: 6.99 },
-        { id: 4, name: "Vanilla", description: "Soothing vanilla fragrance", price: 7.99 },
-      ]
-      setAromas(mockAromas)
-    } catch (err) {
-      console.error("Error fetching aromas:", err)
-    }
-  }
-
-  // Handle quantity change
-  const handleQuantityChange = (value) => {
-    const newQuantity = Math.max(1, Math.min(10, value))
-    setQuantity(newQuantity)
-    updateTotalPrice(newQuantity, selectedAroma)
-  }
 
   // Handle aroma selection
   const handleAromaSelect = (aroma) => {
@@ -508,48 +501,116 @@ const ModelConfigurator = () => {
     }
   }
 
-  // Handle add to cart
-  const handleAddToCart = async () => {
+  // Update the handleAddToCart function to map mesh names to bone IDs
+  const handleAddToCart = async (cartData) => {
     if (!product) return
-
-    // Check if user is authenticated
-    if (!isAuthenticated()) {
-      setShowLoginModal(true)
-      return
-    }
 
     try {
       setAddingToCart(true)
 
-      // In a real app, you would:
-      // 1. Create a ModifiedBoneGroup with the customized bones
-      // 2. Create a CartItem with the product, aroma, and ModifiedBoneGroup
-
-      // Prepare cart item data with bone configurations
-      const cartItem = {
-        productId: product.id,
-        quantity,
-        price: totalPrice,
-        boneConfigurations: { ...state.items },
-        aromaId: selectedAroma?.id || null,
+      // Check if aroma is selected
+      if (!cartData.aromaId) {
+        setNotificationConfig({
+          title: "Aroma Required",
+          message: "Please select an aroma before adding to cart.",
+          type: "error",
+        })
+        setShowNotificationModal(true)
+        setAddingToCart(false)
+        return
       }
 
-      // TODO: Implement actual cart service call
-      console.log("Adding to cart:", cartItem)
+      // Map mesh names to actual bone IDs
+      const mappedModifiedBones = cartData.modifiedBones.map((bone) => {
+        // Convert boneId to string for comparison if it's not already a string
+        const meshName = typeof bone.boneId === "string" ? bone.boneId : String(bone.boneId)
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800))
+        // Try to find a matching bone by name
+        const matchingBone = productBones.find(
+          (productBone) => productBone.name && productBone.name.toLowerCase() === meshName.toLowerCase(),
+        )
+
+        if (matchingBone) {
+          return {
+            ...bone,
+            boneId: matchingBone.id, // Use the actual bone ID from the database
+          }
+        }
+
+        // If no match is found, log a warning and use the first bone as fallback
+        console.warn(`No matching bone found for mesh: ${meshName}`)
+        return productBones.length > 0 ? { ...bone, boneId: productBones[0].id } : bone
+      })
+
+      // Update the cart data with the mapped bones
+      const updatedCartData = {
+        ...cartData,
+        modifiedBones: mappedModifiedBones,
+      }
+
+      // Add the cart item using the cartService
+      await addToCart(updatedCartData)
 
       // Show success message
-      alert("Product added to cart!")
+      setNotificationConfig({
+        title: "Added to Cart",
+        message: "Your customized product has been added to your cart successfully!",
+        type: "success",
+        actionButton: (
+          <div className="flex gap-4">
+            <button
+              onClick={() => {
+                setShowNotificationModal(false)
+                navigate("/starter")
+              }}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white hover:opacity-90 transition-all shadow-md"
+            >
+              Go to Home
+            </button>
+            <button
+              onClick={() => {
+                setShowNotificationModal(false)
+                navigate("/cart")
+              }}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
+            >
+              View Cart
+            </button>
+          </div>
+        ),
+      })
+      setShowNotificationModal(true)
       setAddingToCart(false)
-
-      // Navigate to starter page
-      navigate("/starter")
     } catch (err) {
       console.error("Error adding to cart:", err)
       setAddingToCart(false)
-      alert("Failed to add product to cart. Please try again.")
+
+      // Check if it's a user ID error
+      if (err.message && err.message.includes("User ID")) {
+        setNotificationConfig({
+          title: "Authentication Required",
+          message: "User ID is required. Please log in again.",
+          type: "error",
+          actionButton: (
+            <button
+              onClick={() => {
+                setShowNotificationModal(false)
+                setShowLoginModal(true)
+              }}
+              className="px-8 py-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
+            >
+              Log In
+            </button>
+          ),
+        })
+      } else {
+        setNotificationConfig({
+          title: "Error",
+          message: "Failed to add product to cart. Please try again.",
+          type: "error",
+        })
+      }
+      setShowNotificationModal(true)
     }
   }
 
@@ -671,7 +732,7 @@ const ModelConfigurator = () => {
           </div>
         </div>
 
-        {/* Left sidebar - Customization controls and Aromas */}
+        {/* Left sidebar - Customization controls */}
         <div className="absolute top-20 left-6 w-[230px] z-20 space-y-4">
           {/* Customization panel */}
           <div className="glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg">
@@ -709,94 +770,37 @@ const ModelConfigurator = () => {
               </div>
             )}
           </div>
-
         </div>
 
-        {/* Right sidebar - Product details */}
-        <div className="absolute top-20 right-6 w-[230px] z-20">
-          <div className="glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg mb-4">
-            <h1 className="text-lg font-bold uppercase mb-1">{product.name}</h1>
-            <p className="text-lg font-bold mb-4">{totalPrice.toFixed(2)} B</p>
+        {/* Right sidebar - Product details and Aroma selection */}
+        <div className="absolute top-20 right-6 w-[230px] z-20 flex flex-col gap-4">
+          {/* Product details panel */}
+          <ProductQuantity
+            product={product}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            totalPrice={totalPrice}
+            updateTotalPrice={updateTotalPrice}
+            selectedAroma={selectedAroma}
+          />
 
-            {/* Description */}
-            <div className="mb-4">
-              <h2 className="text-xs font-medium mb-1">Description</h2>
-              <p className="text-gray-700 text-xs">
-                {product.description ||
-                  "Our flagship inhaler with customizable features, sleek design with maximum efficiency"}
-              </p>
-            </div>
-
-            {/* Quantity selector */}
-            <div>
-              <p className="text-xs font-medium mb-2">Quantity</p>
-              <div className="flex items-center">
-                <button
-                  onClick={() => handleQuantityChange(quantity - 1)}
-                  disabled={quantity <= 1}
-                  className="w-8 h-8 flex items-center justify-center border border-white/50 bg-white/20 rounded-l-full disabled:opacity-50"
-                >
-                  <Minus size={14} />
-                </button>
-                <div className="w-10 h-8 flex items-center justify-center border-t border-b border-white/50 bg-white/20">
-                  {quantity}
-                </div>
-                <button
-                  onClick={() => handleQuantityChange(quantity + 1)}
-                  disabled={quantity >= 10}
-                  className="w-8 h-8 flex items-center justify-center border border-white/50 bg-white/20 rounded-r-full disabled:opacity-50"
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-            </div>
+          {/* Aroma selection panel */}
+          <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+            <AromaSelector onAromaSelect={handleAromaSelect} selectedAroma={selectedAroma} />
           </div>
 
-          {/* Aroma selection panel - Moved from right sidebar */}
-          {aromas.length > 0 && (
-            <div className="glass-panel p-5 rounded-[24px] backdrop-blur-xl border border-white/40 shadow-lg">
-              <h2 className="text-[#0c9df8] text-lg font-medium mb-1">Aromas</h2>
-              <p className="text-gray-700 text-sm mb-4">Select a scent for your product</p>
-
-              <div className="space-y-2">
-                {aromas.map((aroma) => (
-                  <button
-                    key={aroma.id}
-                    onClick={() => handleAromaSelect(aroma)}
-                    className={`w-full flex items-center justify-between p-2 rounded-md text-sm ${
-                      selectedAroma?.id === aroma.id
-                        ? "bg-blue-50/50 text-[#0c9df8]"
-                        : "hover:bg-white/30 text-gray-700"
-                    }`}
-                  >
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">{aroma.name}</span>
-                      <span className="text-xs text-gray-500">{aroma.description}</span>
-                    </div>
-                    <span className="text-xs font-medium">{aroma.price.toFixed(2)} B</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Add to cart button - separate from product details */}
-          <button
-            onClick={handleAddToCart}
-            disabled={addingToCart}
-            className="w-full glass-button bg-gradient-to-r from-pink-400/80 to-purple-500/80 text-white py-3 rounded-full hover:opacity-90 transition-all disabled:opacity-70 flex items-center justify-center shadow-lg border border-white/30 group"
-          >
-            {addingToCart ? (
-              <span className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Adding...
-              </span>
-            ) : (
-              <span className="flex items-center font-medium group-hover:scale-105 text-white">
-                ADD TO CART <ShoppingCart size={18} className="ml-2" />
-              </span>
-            )}
-          </button>
+          <CartHandler
+            product={product}
+            quantity={quantity}
+            selectedAroma={selectedAroma}
+            totalPrice={totalPrice}
+            boneConfigurations={snap.items}
+            productBones={productBones} // Pass the product bones
+            onAddToCart={handleAddToCart}
+            isAddingToCart={addingToCart}
+            onShowLoginModal={() => setShowLoginModal(true)}
+          />
         </div>
       </div>
 
@@ -810,6 +814,16 @@ const ModelConfigurator = () => {
         onLogin={handleLogin}
         redirectPath="/starter"
         message="Please login to add items to your cart. You need to be logged in to save your customizations and complete your purchase."
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        title={notificationConfig.title}
+        message={notificationConfig.message}
+        type={notificationConfig.type}
+        actionButton={notificationConfig.actionButton}
       />
     </div>
   )

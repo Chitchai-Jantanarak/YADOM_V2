@@ -10,7 +10,7 @@ export const getProductAssetPath = (product) => {
       // Use the model{id}.glb naming convention
       return `/src/assets/models/model${product.id}.glb`
     } else if (product.type === "ACCESSORY") {
-      return `/src/assets/images/products/${product.id}.png`
+      return `/src/assets/images/shop/${product.id}.png`
     }
   
     return null
