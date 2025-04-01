@@ -13,12 +13,14 @@ import { authService } from "../services/authService"
 import { addToCart } from "../services/cartService"
 import LoginModal from "../components/ui/LoginModal"
 import NotificationModal from "../components/ui/NotificationModal"
+import TransactionModal from "../components/ui/TransactionModal"
 import AromaSelector from "../components/ui/AromaSelector"
 import ProductQuantity from "../components/ui/ProductQuantity"
 import CartHandler from "../components/ui/CartHandler"
 import * as THREE from "three"
 import React from "react"
 import { useMobile } from "../hooks/useMobile.js"
+import { useOrderCheck } from "../hooks/useOrderCheck"
 
 // Debounce function to limit how often a function is called
 const debounce = (func, delay) => {
@@ -367,6 +369,9 @@ const ModelConfigurator = () => {
   const [modelParts, setModelParts] = useState([])
   const snap = useSnapshot(state)
   const [productBones, setProductBones] = useState([])
+  // Add these state variables inside the ModelConfigurator component after other useState declarations
+  const [showTransactionModal, setShowTransactionModal] = useState(false)
+  const { hasPendingOrder, pendingOrderId, isChecking } = useOrderCheck()
 
   // Notification modal state
   const [showNotificationModal, setShowNotificationModal] = useState(false)
@@ -507,6 +512,13 @@ const ModelConfigurator = () => {
 
     try {
       setAddingToCart(true)
+
+      // Check if user has pending orders
+      if (hasPendingOrder) {
+        setShowTransactionModal(true)
+        setAddingToCart(false)
+        return
+      }
 
       // Check if aroma is selected
       if (!cartData.aromaId) {
@@ -806,6 +818,13 @@ const ModelConfigurator = () => {
 
       {/* Mobile Blocking Modal */}
       <MobileBlockingModal isOpen={showMobileModal} onClose={handleMobileModalClose} />
+
+      {/* Add the TransactionModal component at the end of the return statement, just before the closing </div> */}
+      <TransactionModal
+        isOpen={showTransactionModal}
+        onClose={() => setShowTransactionModal(false)}
+        orderId={pendingOrderId}
+      />
 
       {/* Login Modal */}
       <LoginModal

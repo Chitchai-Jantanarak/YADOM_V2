@@ -14,10 +14,12 @@ import { transformProduct } from "../utils/dataTransformers"
 import { handleImageError } from "../utils/imageUtils"
 import { isAuthenticated, authService } from "../services/authService"
 import NavBar2 from "../components/layout/NavBar2"
+import TransactionModal from "../components/ui/TransactionModal"
 import Footer from "../components/layout/Footer"
 import PageTransition from "../components/layout/PageTransition"
 import LoginModal from "../components/ui/LoginModal"
 import { cartService } from "../services/cartService"
+import { useOrderCheck } from "../hooks/useOrderCheck"
 
 const ProductView = () => {
   const { id } = useParams()
@@ -31,6 +33,9 @@ const ProductView = () => {
   const [relatedProducts, setRelatedProducts] = useState([])
   const [addingToCart, setAddingToCart] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  // Add these state variables inside the ProductView component after other useState declarations
+  const [showTransactionModal, setShowTransactionModal] = useState(false)
+  const { hasPendingOrder, pendingOrderId, isChecking } = useOrderCheck()
 
   // Fetch product data
   useEffect(() => {
@@ -116,13 +121,19 @@ const ProductView = () => {
     }
   }
 
-  // Handle add to cart
+  // Modify the handleAddToCart function to check for pending orders
   const handleAddToCart = async () => {
     if (!product) return
 
     // Check if user is authenticated
     if (!isAuthenticated()) {
       setShowLoginModal(true)
+      return
+    }
+
+    // Check if user has pending orders
+    if (hasPendingOrder) {
+      setShowTransactionModal(true)
       return
     }
 
@@ -332,7 +343,13 @@ const ProductView = () => {
           </div>
         )}
       </div>
-
+      {/* Add the TransactionModal component at the end of the return statement, just before the closing </div> */}
+      {/* Add this right before the LoginModal component */}
+      <TransactionModal
+        isOpen={showTransactionModal}
+        onClose={() => setShowTransactionModal(false)}
+        orderId={pendingOrderId}
+      />
       <Footer carousel={1} />
 
       {/* Login Modal */}
