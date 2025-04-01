@@ -247,13 +247,13 @@ section {
 /* --------- Layouts & UI --------- */
 
 .expereince-home-sticky-container {
-  height: 800vh;
+  height: 700vh;
   position: relative;
   z-index: 1;
 }
 
 .expereince-home-sticky-section {
-  height: 800vh;
+  height: 700vh;
 }
 
 @keyframes slideIn {

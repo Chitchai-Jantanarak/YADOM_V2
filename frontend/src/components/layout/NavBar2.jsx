@@ -262,7 +262,7 @@ const NavBar2 = () => {
 
   return (
     <div
-      className={`nav sticky w-full top-0 z-[90] transition-transform duration-300 p-3 ${
+      className={`nav sticky w-full top-0 z-[90] transition-transform duration-300 p-3  ${
         visible ? "translate-y-0" : "-translate-y-full"
       }`}
       style={{ backgroundColor: "transparent" }}

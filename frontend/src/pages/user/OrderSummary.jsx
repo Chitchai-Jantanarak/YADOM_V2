@@ -6,7 +6,6 @@ import PageTransition from "../../components/layout/PageTransition"
 import { getOrderById, getUserOrders, getAllOrders, updateOrderStatus } from "../../services/orderService"
 import { getCurrentUser } from "../../services/authService"
 import NavBar2 from "../../components/layout/NavBar2"
-import { getImageUrl } from "../../utils/imageUtils"
 
 const OrderSummary = () => {
   const { orderId } = useParams()
@@ -224,10 +223,7 @@ const OrderSummary = () => {
                       <div key={item.id} className="flex items-start border-b pb-4">
                         <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
                           <img
-                            src={getImageUrl(
-                              `/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`,
-                              "product",
-                            )}
+                            src={`/src/assets/images/shop/${item.product.id}.png`}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                             onError={(e) => (e.target.src = "/src/assets/images/placeholder.png")}
@@ -318,22 +314,56 @@ const OrderSummary = () => {
                       <h3 className="font-medium mb-2">Admin Actions</h3>
                       <div className="flex flex-wrap gap-2">
                         <button
+                          onClick={() => handleUpdateStatus(selectedOrder.id, "WAITING")}
+                          className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                            selectedOrder.status === "WAITING"
+                              ? "bg-yellow-200 text-yellow-800"
+                              : "bg-yellow-500 text-white hover:bg-yellow-600"
+                          }`}
+                          disabled={selectedOrder.status === "WAITING" || updatingStatus}
+                        >
+                          Mark as Waiting
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(selectedOrder.id, "PENDING")}
+                          className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                            selectedOrder.status === "PENDING"
+                              ? "bg-blue-200 text-blue-800"
+                              : "bg-blue-500 text-white hover:bg-blue-600"
+                          }`}
+                          disabled={selectedOrder.status === "PENDING" || updatingStatus}
+                        >
+                          Mark as Pending
+                        </button>
+                        <button
                           onClick={() => handleUpdateStatus(selectedOrder.id, "CONFIRMED")}
-                          className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors disabled:bg-gray-400"
+                          className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                            selectedOrder.status === "CONFIRMED"
+                              ? "bg-green-200 text-green-800"
+                              : "bg-green-500 text-white hover:bg-green-600"
+                          }`}
                           disabled={selectedOrder.status === "CONFIRMED" || updatingStatus}
                         >
                           Confirm Order
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(selectedOrder.id, "COMPLETED")}
-                          className="bg-purple-500 text-white px-3 py-1 rounded-md text-sm hover:bg-purple-600 transition-colors disabled:bg-gray-400"
+                          className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                            selectedOrder.status === "COMPLETED"
+                              ? "bg-purple-200 text-purple-800"
+                              : "bg-purple-500 text-white hover:bg-purple-600"
+                          }`}
                           disabled={selectedOrder.status === "COMPLETED" || updatingStatus}
                         >
                           Mark as Completed
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(selectedOrder.id, "CANCELED")}
-                          className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600 transition-colors disabled:bg-gray-400"
+                          className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                            selectedOrder.status === "CANCELED"
+                              ? "bg-red-200 text-red-800"
+                              : "bg-red-500 text-white hover:bg-red-600"
+                          }`}
                           disabled={selectedOrder.status === "CANCELED" || updatingStatus}
                         >
                           Cancel Order

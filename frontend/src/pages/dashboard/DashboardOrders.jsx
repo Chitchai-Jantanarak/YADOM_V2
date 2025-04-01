@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { RefreshCw, Filter } from 'lucide-react'
+import { RefreshCw, Filter } from "lucide-react"
 import { OrdersTable } from "../../components/ui/OrdersTable"
 import { useApi } from "../../hooks/useApi"
 import { getAllOrders } from "../../services/orderService"
@@ -28,113 +28,113 @@ export default function OrdersPage() {
   // Extract orders from API response
   useEffect(() => {
     if (apiResponse) {
-      let ordersArray = [];
-      
+      let ordersArray = []
+
       // Check if the response has the expected structure
       if (Array.isArray(apiResponse)) {
         // If the response is already an array, use it directly
-        ordersArray = apiResponse;
+        ordersArray = apiResponse
       } else if (apiResponse && Array.isArray(apiResponse.orders)) {
         // If the response has an orders property that's an array, use that
-        ordersArray = apiResponse.orders;
-        
+        ordersArray = apiResponse.orders
+
         // If there's pagination info, save it
         if (apiResponse.pagination) {
-          setPagination(apiResponse.pagination);
+          setPagination(apiResponse.pagination)
         }
       } else if (apiResponse && Array.isArray(apiResponse.data)) {
         // If the response has a data property that's an array, use that
-        ordersArray = apiResponse.data;
-        
+        ordersArray = apiResponse.data
+
         // If there's pagination info, save it
         if (apiResponse.pagination) {
-          setPagination(apiResponse.pagination);
+          setPagination(apiResponse.pagination)
         }
       } else {
         // Fallback to empty array if structure is unexpected
-        console.error("Unexpected API response structure:", apiResponse);
-        ordersArray = [];
+        console.error("Unexpected API response structure:", apiResponse)
+        ordersArray = []
       }
-      
-      setOriginalOrders(ordersArray);
-      setFilteredOrders(ordersArray);
+
+      setOriginalOrders(ordersArray)
+      setFilteredOrders(ordersArray)
     } else {
-      setOriginalOrders([]);
-      setFilteredOrders([]);
+      setOriginalOrders([])
+      setFilteredOrders([])
     }
-  }, [apiResponse]);
+  }, [apiResponse])
 
   // Apply filters when filter state changes
   useEffect(() => {
-    if (!originalOrders.length) return;
-    
-    let filtered = [...originalOrders];
+    if (!originalOrders.length) return
+
+    let filtered = [...originalOrders]
 
     // Apply status filter
     if (statusFilter) {
-      filtered = filtered.filter((order) => order.status === statusFilter);
+      filtered = filtered.filter((order) => order.status === statusFilter)
     }
 
     // Apply date filter
     if (dateFilter) {
-      const today = new Date();
-      const filterDate = new Date();
+      const today = new Date()
+      const filterDate = new Date()
 
       switch (dateFilter) {
         case "today":
           filtered = filtered.filter((order) => {
-            const orderDate = new Date(order.createdAt);
-            return orderDate.toDateString() === today.toDateString();
-          });
-          break;
+            const orderDate = new Date(order.createdAt)
+            return orderDate.toDateString() === today.toDateString()
+          })
+          break
         case "week":
-          filterDate.setDate(today.getDate() - 7);
+          filterDate.setDate(today.getDate() - 7)
           filtered = filtered.filter((order) => {
-            const orderDate = new Date(order.createdAt);
-            return orderDate >= filterDate;
-          });
-          break;
+            const orderDate = new Date(order.createdAt)
+            return orderDate >= filterDate
+          })
+          break
         case "month":
-          filterDate.setMonth(today.getMonth() - 1);
+          filterDate.setMonth(today.getMonth() - 1)
           filtered = filtered.filter((order) => {
-            const orderDate = new Date(order.createdAt);
-            return orderDate >= filterDate;
-          });
-          break;
+            const orderDate = new Date(order.createdAt)
+            return orderDate >= filterDate
+          })
+          break
         default:
-          break;
+          break
       }
     }
 
-    setFilteredOrders(filtered);
-  }, [statusFilter, dateFilter, originalOrders]);
+    setFilteredOrders(filtered)
+  }, [statusFilter, dateFilter, originalOrders])
 
   // Handle navigation to order details
   const handleViewOrderDetails = (orderId) => {
-    navigate(`/orders/${orderId}`);
-  }
-
-  // Handle navigation to order edit
-  const handleEditOrder = (orderId) => {
-    navigate(`/orders/${orderId}/edit`);
+    navigate(`/order/${orderId}`)
   }
 
   // Handle status filter change
   const handleStatusFilterChange = (status) => {
-    setStatusFilter(status === statusFilter ? null : status);
+    setStatusFilter(status === statusFilter ? null : status)
   }
 
   // Handle date filter change
   const handleDateFilterChange = (date) => {
-    setDateFilter(date === dateFilter ? null : date);
+    setDateFilter(date === dateFilter ? null : date)
   }
 
   // Clear all filters
   const clearAllFilters = () => {
-    setStatusFilter(null);
-    setDateFilter(null);
+    setStatusFilter(null)
+    setDateFilter(null)
   }
 
+  // Handle page change for pagination
+  const handlePageChange = (page) => {
+    // Implement pagination logic here if needed
+    console.log("Page changed to:", page)
+  }
 
   const OrdersContent = () => (
     <div className="w-full md:pl-64">
@@ -230,11 +230,11 @@ export default function OrdersPage() {
         <OrdersTable
           orders={filteredOrders}
           onViewDetails={handleViewOrderDetails}
-          onEditOrder={handleEditOrder}
           statusFilter={statusFilter}
           onClearFilter={clearAllFilters}
           showPagination={true}
           pagination={pagination}
+          onPageChange={handlePageChange}
         />
       ) : (
         <div className="text-center py-16">
@@ -243,7 +243,7 @@ export default function OrdersPage() {
           </div>
           <h2 className="text-2xl font-semibold text-gray-700 mb-2">No Orders Found</h2>
           <p className="text-gray-500 mb-6">There are no orders to display at this time.</p>
-          <button 
+          <button
             onClick={refreshOrders}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
@@ -260,3 +260,4 @@ export default function OrdersPage() {
     </ProtectedRoute>
   )
 }
+

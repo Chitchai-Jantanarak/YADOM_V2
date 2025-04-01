@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CircleHelp } from 'lucide-react';
 
 const FAQ = () => {
   const [openQuestion, setOpenQuestion] = useState(null);
@@ -72,7 +73,7 @@ const FAQ = () => {
         {/* Decorative Section - adjusted to take 5 columns on desktop */}
         <div className="md:col-span-5 flex flex-col items-center justify-center">
           <div className="mb-6">
-            <img src="/Main/questionMask.png" alt="Question mark" className="w-40 h-40" />
+            <CircleHelp />
           </div>
           <h2 className="text-3xl font-bold mb-2">Any Question?</h2>
           <p className="text-base text-gray-600 text-center">You can ask anything you want to know Feedback</p>

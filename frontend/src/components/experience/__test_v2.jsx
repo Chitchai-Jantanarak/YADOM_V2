@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { Environment, RoundedBox, PerspectiveCamera } from '@react-three/drei';
-import { a, config, useSpring } from '@react-spring/three';
+import { a, useSpring } from '@react-spring/three';
 import { GlobalCanvas, SmoothScrollbar, UseCanvas } from '@14islands/r3f-scroll-rig';
 import { StickyScrollScene } from '@14islands/r3f-scroll-rig/powerups';
 
@@ -11,7 +11,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import SectionText from '../../utils/SectionText';
-import Model1_exp from '../models/Model1_exp';
+import Model6 from '../models/Model6';
 import Arrow from '../ui/Arrow';
 import Emoji from '../ui/Emoji';
 
@@ -42,23 +42,26 @@ const useWindowSize = () => {
 const size = 100;  
 const sizeInner = 80; 
 
-const AnimatedModel1 = a(Model1_exp);
+const AnimatedModel1 = a(Model6);
+const config = {
+  wobbly: { mass: 1, tension: 180, friction: 12 },
+  stiff: { mass: 1, tension: 280, friction: 60 },
+}
 
 const AnimatedModel = ({ scale, scrollState, inViewport }) => {
   const { width } = useWindowSize()
+  const { height } = useWindowSize()
   const modelRef = useRef()
   const innerModelLRef = useRef()
   const innerModelRRef = useRef()
 
   const tl = useRef()
   const tlRotation = useRef()
-  const tlColor3 = useRef()
-  const tlColor4 = useRef()
-  const tlColor5 = useRef()
   const tlSplit = useRef()
 
-  const size = 1
-  const sizeInner = 1
+  // Increase the size value for better visibility
+  const size = 40 // Increased from 20 to 40
+  const sizeInner = 30 // Increased from 15 to 30
 
   // Spring animations for main and inner model scales
   const springMain = useSpring({
@@ -73,7 +76,8 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     delay: inViewport ? 300 : 0,
   })
 
-  const [mainColor, setMainColor] = useState("#1e88e5")
+  // Use a fixed color instead of changing it
+  const defaultColor = "#1e88e5" // Default blue color
   const [innerModelOpacity, setInnerModelOpacity] = useState(0)
   const [mainModelOpacity, setMainModelOpacity] = useState(1)
   const [splitProgress, setSplitProgress] = useState(0)
@@ -90,7 +94,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
         scrub: 1,
       },
     })
-    tl.current.fromTo(modelRef.current.position, { x: width * 0.2 }, { x: 0, ease: "power2.inOut" })
+    tl.current.fromTo(modelRef.current.position, { x: width * 0.2, y: height * 0 }, { x: 0, y: 0, ease: "power2.inOut" })
 
     // Rotation over sections 3-5
     tlRotation.current = gsap.timeline({
@@ -104,57 +108,8 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     })
     tlRotation.current.to(modelRef.current.rotation, { y: Math.PI * 4.66, ease: "linear" })
 
-    // Section 3: Change color to red
-    tlColor3.current = gsap.timeline({
-      scrollTrigger: {
-        trigger: ".experience-section-3",
-        start: "top bottom",
-        end: "bottom top",
-        scrub: 1,
-        onUpdate: () => {
-          const progress = tlColor3.current.progress()
-          if (progress > 0.5) {
-            setMainColor("#e53935")
-          }
-        },
-      },
-    })
-
-    // Section 4: Change color to green
-    tlColor4.current = gsap.timeline({
-      scrollTrigger: {
-        trigger: ".experience-section-4",
-        start: "top top",
-        end: "bottom top",
-        scrub: 1,
-        onUpdate: () => {
-          const progress = tlColor4.current.progress()
-          if (progress > 0.5) {
-            setMainColor("#43a047")
-          }
-        },
-      },
-    })
-
-    // Section 5: Change color to purple
-    tlColor5.current = gsap.timeline({
-      scrollTrigger: {
-        trigger: ".experience-section-5",
-        start: "top top",
-        end: "bottom top",
-        scrub: 1,
-        onUpdate: () => {
-          const progress = tlColor5.current.progress()
-          if (progress > 0.5) {
-            setMainColor("#8e24aa")
-          }
-        },
-      },
-    })
-
-    
     return () => {
-      ;[tl, tlRotation, tlColor3, tlColor4, tlColor5, tlSplit].forEach((t) => {
+      ;[tl, tlRotation, tlSplit].forEach((t) => {
         if (t.current) t.current.kill()
       })
     }
@@ -164,31 +119,31 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
     <>
       <ambientLight intensity={Math.PI / 2} />
       <Environment preset="dawn" />
-      <PerspectiveCamera>
+      <PerspectiveCamera position={[0, 0, 300]} fov={40}>
+        {" "}
+        {/* Increased z-position from 200 to 300 */}
         {/* Main model that will become invisible during split */}
         <AnimatedModel1
           ref={modelRef}
           scale={springMain.scale}
           position={[0, 0, 0]}
-          color={mainColor}
+          color={defaultColor}
           opacity={mainModelOpacity}
         />
-
         {/* Left half model */}
         <AnimatedModel1
           ref={innerModelLRef}
           scale={springInner.scale}
           position={[0, 0, 0]}
-          color={mainColor}
+          color={defaultColor}
           opacity={innerModelOpacity}
         />
-
         {/* Right half model */}
         <AnimatedModel1
           ref={innerModelRRef}
           scale={springInner.scale}
           position={[0, 0, 0]}
-          color={mainColor}
+          color={defaultColor}
           opacity={innerModelOpacity}
         />
       </PerspectiveCamera>
@@ -398,25 +353,6 @@ const StickySection = () => {
           </SectionText>
         </div>
 
-        {/* -------------------------------
-            Section 7 - Join Us
-        ------------------------------- */}
-        <div
-          ref={el}
-          className="Debug experience-section-7"
-          style={{ height: "100vh", width: "100%", zIndex: "1" }}
-        >
-          <SectionText 
-            triggerElement=".experience-section-7"
-            backgroundColor="#ffffff"
-            startPosition="center top"
-            endPosition="bottom center"
-          >
-            <div className="absolute left-[5%] top-[50%] transform -translate-y-1/2 max-w-[500px]">
-              
-            </div>
-          </SectionText>
-        </div>
       </div>
 
       {/* 

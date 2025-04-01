@@ -61,6 +61,8 @@ export const normalizeImageUrl = (url) => {
     return `${baseWithoutTrailingSlash}/${pathWithoutLeadingSlash}`
   }
 
+  
+
   // Otherwise, it might be a relative path to the current domain
   return url
 }
@@ -73,6 +75,9 @@ export const normalizeImageUrl = (url) => {
  * @returns {string|null} - The resolved image URL or null if not found
  */
 export const getImageUrl = (source, type = "default", depth = 0) => {
+
+  console.log(typeof source);
+  
   // Prevent infinite recursion
   if (depth > 5) return null
 

@@ -97,7 +97,7 @@ const OrderDetailsPage = () => {
               <div key={item.id} className="flex items-center">
                 <div className="w-20 h-20 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
                   <img
-                    src={getImageUrl(`/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`, "product")}
+                    src={`/src/assets/images/shop/${item.product.id}.png`}
                     alt={item.product.name}
                     className="w-full h-full object-cover"
                     onError={(e) => handleImageError(e, "product")}

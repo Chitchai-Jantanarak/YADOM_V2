@@ -238,8 +238,9 @@ const Home = () => {
                   baseVelocity={-5}
                   className="font-anybody"
                 />
-
-                <FAQ />
+                <div className="mb-72 mt-24">
+                  <FAQ />
+                </div>
                 <Footer carousel="true" />
               </div>
             </div>

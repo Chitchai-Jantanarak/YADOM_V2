@@ -114,10 +114,7 @@ const UserPayment = () => {
                   <div key={item.id} className="flex items-start border-b pb-4">
                     <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
                       <img
-                        src={getImageUrl(
-                          `/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`,
-                          "product",
-                        )}
+                        src={`/src/assets/images/shop/${item.product.id}.png`}
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => (e.target.src = "/src/assets/images/unknown_product.png")}

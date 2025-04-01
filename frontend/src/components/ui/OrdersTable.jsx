@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Search, Filter, Trash2, Edit, AlertCircle, Eye, Calendar, X } from 'lucide-react'
+import { Search, Filter, Edit, AlertCircle, Eye, Calendar, X } from "lucide-react"
+import { updateOrderStatus } from "../../services/orderService"
 
 export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, onClearFilter }) => {
   const [searchTerm, setSearchTerm] = useState("")
@@ -11,6 +12,8 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
   const [localOrders, setLocalOrders] = useState(orders || [])
   const [selectedDate, setSelectedDate] = useState(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState({})
+  const [updatingOrderId, setUpdatingOrderId] = useState(null)
   const datePickerRef = useRef(null)
   const buttonRef = useRef(null)
   const navigate = useNavigate()
@@ -25,20 +28,20 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        datePickerRef.current && 
+        datePickerRef.current &&
         !datePickerRef.current.contains(event.target) &&
-        buttonRef.current && 
+        buttonRef.current &&
         !buttonRef.current.contains(event.target)
       ) {
-        setShowDatePicker(false);
+        setShowDatePicker(false)
       }
-    };
+    }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
   if (!localOrders || localOrders.length === 0) {
     return (
@@ -68,9 +71,38 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
     navigate(`/orders/${orderId}`)
   }
 
-  // Handle navigation to order edit
-  const handleEditOrder = (orderId) => {
-    navigate(`/orders/${orderId}/edit`)
+  // Toggle status dropdown
+  const toggleStatusDropdown = (orderId, e) => {
+    e.stopPropagation()
+    setStatusDropdownOpen((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }))
+  }
+
+  // Handle status update
+  const handleStatusUpdate = async (orderId, newStatus, e) => {
+    e.stopPropagation()
+    try {
+      setUpdatingOrderId(orderId)
+      await updateOrderStatus(orderId, newStatus)
+
+      // Update local state
+      setLocalOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order)),
+      )
+
+      // Close dropdown
+      setStatusDropdownOpen((prev) => ({
+        ...prev,
+        [orderId]: false,
+      }))
+    } catch (error) {
+      console.error("Error updating order status:", error)
+      alert("Failed to update order status")
+    } finally {
+      setUpdatingOrderId(null)
+    }
   }
 
   // Format date
@@ -99,50 +131,50 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
 
   // Handle date change
   const handleDateChange = (e) => {
-    const dateValue = e.target.value;
-    
+    const dateValue = e.target.value
+
     if (dateValue) {
-      const newDate = new Date(dateValue);
+      const newDate = new Date(dateValue)
       // Set time to noon to avoid timezone issues
-      newDate.setHours(12, 0, 0, 0);
-      setSelectedDate(newDate);
+      newDate.setHours(12, 0, 0, 0)
+      setSelectedDate(newDate)
     } else {
-      setSelectedDate(null);
+      setSelectedDate(null)
     }
-  };
+  }
 
   // Apply date filter
   const applyDateFilter = () => {
-    setShowDatePicker(false);
-  };
+    setShowDatePicker(false)
+  }
 
   // Clear date filter
   const clearDateFilter = () => {
-    setSelectedDate(null);
+    setSelectedDate(null)
   }
 
   // Reset all filters
   const resetAllFilters = () => {
-    setSearchTerm("");
-    setFilterStatus("");
-    setSortBy("createdAt");
-    clearDateFilter();
+    setSearchTerm("")
+    setFilterStatus("")
+    setSortBy("createdAt")
+    clearDateFilter()
     if (onClearFilter) {
-      onClearFilter();
+      onClearFilter()
     }
   }
 
   // Toggle date picker visibility
   const toggleDatePicker = () => {
-    setShowDatePicker(!showDatePicker);
+    setShowDatePicker(!showDatePicker)
   }
 
   // Filter and sort orders
   const filteredOrders = localOrders.filter((order) => {
     // Convert id to string for search
-    const orderId = String(order.id);
-    const userId = String(order.userId);
-    
+    const orderId = String(order.id)
+    const userId = String(order.userId)
+
     // Filter by search term
     const searchMatch =
       orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,18 +185,18 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
     const statusMatch = filterStatus ? order.status === filterStatus : true
 
     // Filter by date
-    let dateMatch = true;
+    let dateMatch = true
     if (selectedDate) {
-      const orderDate = new Date(order.createdAt);
-      const filterDate = new Date(selectedDate);
-      
-      dateMatch = 
+      const orderDate = new Date(order.createdAt)
+      const filterDate = new Date(selectedDate)
+
+      dateMatch =
         orderDate.getFullYear() === filterDate.getFullYear() &&
         orderDate.getMonth() === filterDate.getMonth() &&
-        orderDate.getDate() === filterDate.getDate();
+        orderDate.getDate() === filterDate.getDate()
     }
 
-    return searchMatch && statusMatch && dateMatch;
+    return searchMatch && statusMatch && dateMatch
   })
 
   // Sort orders
@@ -181,10 +213,10 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
 
   // Format date for input value
   const formatDateForInput = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
+    if (!date) return ""
+    const d = new Date(date)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  }
 
   return (
     <div className="bg-white rounded-lg shadow mt-8">
@@ -206,7 +238,7 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
           <div className="flex gap-2 flex-wrap items-center">
             {/* Date Filter Button with Custom Dropdown */}
             <div className="relative">
-              <button 
+              <button
                 ref={buttonRef}
                 onClick={toggleDatePicker}
                 className="border rounded-md px-4 py-2 flex items-center gap-2"
@@ -214,31 +246,30 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
               >
                 <Calendar className="h-4 w-4" />
                 <span>
-                  {selectedDate 
-                    ? new Date(selectedDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
+                  {selectedDate
+                    ? new Date(selectedDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
                       })
-                    : "Select Date"
-                  }
+                    : "Select Date"}
                 </span>
                 {selectedDate && (
-                  <X 
-                    className="h-4 w-4 ml-1 hover:text-red-500" 
+                  <X
+                    className="h-4 w-4 ml-1 hover:text-red-500"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      clearDateFilter();
+                      e.stopPropagation()
+                      clearDateFilter()
                     }}
                   />
                 )}
               </button>
-              
+
               {showDatePicker && (
-                <div 
+                <div
                   ref={datePickerRef}
                   className="absolute right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 p-4"
-                  style={{ minWidth: '260px' }}
+                  style={{ minWidth: "260px" }}
                 >
                   <div className="flex flex-col gap-3">
                     <label htmlFor="date-filter" className="text-sm font-medium text-gray-700">
@@ -254,14 +285,14 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
                       />
                     </div>
                     <div className="flex justify-between mt-2">
-                      <button 
+                      <button
                         className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded"
                         onClick={clearDateFilter}
                         type="button"
                       >
                         Clear
                       </button>
-                      <button 
+                      <button
                         className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                         onClick={applyDateFilter}
                         type="button"
@@ -279,7 +310,7 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
-              <option value="">All Status</option>  
+              <option value="">All Status</option>
               <option value="PENDING">Pending</option>
               <option value="WAITING">Waiting</option>
               <option value="CONFIRMED">Confirmed</option>
@@ -316,11 +347,14 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
               )}
               {selectedDate && (
                 <span>
-                  Date: <strong>{new Date(selectedDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}</strong>
+                  Date:{" "}
+                  <strong>
+                    {new Date(selectedDate).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </strong>
                 </span>
               )}
             </p>
@@ -360,7 +394,7 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td
                     className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 underline cursor-pointer"
-                    onClick={() => onViewDetails ? onViewDetails(order.id) : handleViewOrderDetails(order.id)}
+                    onClick={() => (onViewDetails ? onViewDetails(order.id) : handleViewOrderDetails(order.id))}
                   >
                     {order.id}
                   </td>
@@ -385,18 +419,41 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
                     <div className="flex gap-2">
                       <button
                         className="text-blue-500 hover:text-blue-700"
-                        onClick={() => onViewDetails ? onViewDetails(order.id) : handleViewOrderDetails(order.id)}
+                        onClick={() => (onViewDetails ? onViewDetails(order.id) : handleViewOrderDetails(order.id))}
                         type="button"
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      <button 
-                        className="text-green-500 hover:text-green-700" 
-                        onClick={() => onEditOrder ? onEditOrder(order.id) : handleEditOrder(order.id)}
-                        type="button"
-                      >
-                        <Edit className="h-5 w-5" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          className="text-green-500 hover:text-green-700"
+                          onClick={(e) => toggleStatusDropdown(order.id, e)}
+                          disabled={updatingOrderId === order.id}
+                          type="button"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </button>
+
+                        {statusDropdownOpen[order.id] && (
+                          <div className="absolute z-10 right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200">
+                            <div className="py-1">
+                              <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Update Status</div>
+                              {["WAITING", "PENDING", "CONFIRMED", "COMPLETED", "CANCELED"].map((status) => (
+                                <button
+                                  key={status}
+                                  onClick={(e) => handleStatusUpdate(order.id, status, e)}
+                                  className={`block w-full text-left px-4 py-2 text-sm ${
+                                    status === order.status ? "bg-gray-100 font-medium" : "hover:bg-gray-50"
+                                  } ${getStatusColor(status)}`}
+                                  disabled={updatingOrderId === order.id}
+                                >
+                                  {status}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -413,3 +470,4 @@ export const OrdersTable = ({ orders, onViewDetails, onEditOrder, statusFilter, 
     </div>
   )
 }
+
