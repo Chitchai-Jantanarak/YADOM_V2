@@ -152,49 +152,7 @@ const AnimatedModel = ({ scale, scrollState, inViewport }) => {
       },
     })
 
-    // Section 6: Split animation & inner model opacity
-    tlSplit.current = gsap.timeline({
-      scrollTrigger: {
-        trigger: ".experience-section-6",
-        start: "top bottom",
-        end: "bottom top",
-        scrub: 1,
-        onEnter: () => {
-          // Initialize inner models at the main model's position
-          const mainPos = modelRef.current.position
-          innerModelLRef.current.position.set(mainPos.x, mainPos.y, mainPos.z)
-          innerModelRRef.current.position.set(mainPos.x, mainPos.y, mainPos.z)
-
-          // Set initial rotations
-          innerModelLRef.current.rotation.set(0, 0, 0)
-          innerModelRRef.current.rotation.set(0, 0, 0)
-        },
-        onUpdate: (self) => {
-          const progress = self.progress
-          setSplitProgress(progress)
-
-          setInnerModelOpacity(progress)
-
-          // Calculate split distance based on screen width
-          const splitDistance = width * 0.15 // 15% of screen width
-          const maxRotation = Math.PI / 6 // 30 degrees rotation
-
-          // Apply position and rotation changes only when we're starting to split
-          if (progress > 0.1) {
-            const splitFactor = Math.min((progress - 0.1) * 0.75, 1) // Normalized progress for split animation
-
-            // Left model movement
-            innerModelLRef.current.position.x = -splitDistance * splitFactor
-            innerModelLRef.current.rotation.z = maxRotation * splitFactor
-
-            // Right model movement
-            innerModelRRef.current.position.x = splitDistance * splitFactor
-            innerModelRRef.current.rotation.z = -maxRotation * splitFactor
-          }
-        },
-      },
-    })
-
+    
     return () => {
       ;[tl, tlRotation, tlColor3, tlColor4, tlColor5, tlSplit].forEach((t) => {
         if (t.current) t.current.kill()
@@ -430,7 +388,7 @@ const StickySection = () => {
         >
           <SectionText 
             triggerElement=".experience-section-6"
-            backgroundColor="#f5f5f5"
+            backgroundColor="#ffffff"
             startPosition="center top"
             endPosition="bottom center"
           >
@@ -450,7 +408,7 @@ const StickySection = () => {
         >
           <SectionText 
             triggerElement=".experience-section-7"
-            backgroundColor="#e6f7ff"
+            backgroundColor="#ffffff"
             startPosition="center top"
             endPosition="bottom center"
           >

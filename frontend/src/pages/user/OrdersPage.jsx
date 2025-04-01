@@ -6,6 +6,7 @@ import PageTransition from "../../components/layout/PageTransition"
 import { getUserOrders, cancelOrder } from "../../services/orderService"
 import { X, AlertCircle } from "lucide-react"
 import { handleImageError } from "../../utils/imageUtils"
+import { getImageUrl } from "../../utils/imageUtils"
 
 const OrderStatusBadge = ({ status }) => {
   const statusColors = {
@@ -142,7 +143,10 @@ const OrdersPage = () => {
                       <div key={item.id} className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden">
                           <img
-                            src={`/src/assets/images/shop/${item.product.id}`}
+                            src={getImageUrl(
+                              `/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`,
+                              "product",
+                            )}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                             onError={(e) => handleImageError(e, "product")}

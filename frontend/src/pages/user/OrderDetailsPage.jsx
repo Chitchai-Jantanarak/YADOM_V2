@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useLocation, Link } from "react-router-dom"
-import { getOrderById } from "../../../services/orderService"
-import { handleImageError } from "../../../utils/imageUtils"
+import { getOrderById } from "../../services/orderService"
+import { getImageUrl, handleImageError } from "../../utils/imageUtils"
 
 const OrderStatusBadge = ({ status }) => {
   const statusColors = {
@@ -97,7 +97,7 @@ const OrderDetailsPage = () => {
               <div key={item.id} className="flex items-center">
                 <div className="w-20 h-20 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
                   <img
-                    src={`/src/assets/images/shop/${item.product.id}`}
+                    src={getImageUrl(`/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`, "product")}
                     alt={item.product.name}
                     className="w-full h-full object-cover"
                     onError={(e) => handleImageError(e, "product")}

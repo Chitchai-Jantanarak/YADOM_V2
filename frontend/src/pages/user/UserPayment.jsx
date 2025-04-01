@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import PageTransition from "../../components/layout/PageTransition"
 import { getOrderById, confirmOrderPayment } from "../../services/orderService"
+import { getImageUrl } from "../../utils/imageUtils"
 
 const UserPayment = () => {
   const { orderId } = useParams()
@@ -23,6 +24,8 @@ const UserPayment = () => {
     try {
       setLoading(true)
       const data = await getOrderById(orderId)
+      console.log(data)
+
       setOrder(data)
       setError(null)
     } catch (err) {
@@ -86,6 +89,9 @@ const UserPayment = () => {
     )
   }
 
+  // Calculate total amount
+  const totalAmount = order.cartItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Payment</h1>
@@ -106,8 +112,25 @@ const UserPayment = () => {
               <div className="space-y-4 mb-6">
                 {order.cartItems.map((item) => (
                   <div key={item.id} className="flex items-start border-b pb-4">
+                    <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
+                      <img
+                        src={getImageUrl(
+                          `/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`,
+                          "product",
+                        )}
+                        alt={item.product.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => (e.target.src = "/src/assets/images/unknown_product.png")}
+                      />
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-medium">{item.product.name}</h3>
+                      {item.productColor && (
+                        <p className="text-sm text-gray-600">
+                          Color: {item.productColor.colorName || item.productColor.colorCode}
+                        </p>
+                      )}
+                      {item.aroma && <p className="text-sm text-gray-600">Scents: {item.aroma.name}</p>}
                       <div className="flex justify-between mt-2">
                         <span className="text-sm">Qty: {item.quantity}</span>
                         <span className="font-medium">฿ {item.price.toFixed(2)}</span>
@@ -119,7 +142,7 @@ const UserPayment = () => {
 
               <div className="border-t pt-2 mt-2 flex justify-between font-bold">
                 <span>Total:</span>
-                <span>฿ {order.cartItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</span>
+                <span>฿ {totalAmount}</span>
               </div>
             </div>
           </div>
@@ -128,16 +151,16 @@ const UserPayment = () => {
             <h2 className="text-xl font-semibold mb-4">QR Payment</h2>
             <div className="bg-gray-50 p-6 rounded-lg flex flex-col items-center">
               <div className="mb-6 p-4 border rounded-md bg-white w-64 h-64 flex items-center justify-center">
-                {/* Placeholder for QR code */}
-                <div className="text-center">
-                  <p className="text-gray-500 mb-2">QR Code</p>
-                  <div className="w-48 h-48 border-2 border-dashed border-gray-300 flex items-center justify-center">
-                    <p className="text-sm text-gray-400">Scan to pay</p>
-                  </div>
-                </div>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Payment%20for%20Order%20${order.id}%20Amount%20${totalAmount}%20THB`}
+                  alt="Payment QR Code"
+                  className="w-48 h-48 object-contain"
+                  onError={(e) => (e.target.src = "/src/assets/images/unknown_product.png")}
+                />
               </div>
 
-              <p className="text-center mb-6">Please scan the QR code with your banking app to complete the payment.</p>
+              <p className="text-center mb-2">Please scan the QR code with your banking app to complete the payment.</p>
+              <p className="text-center text-sm text-gray-500 mb-6">Amount: ฿ {totalAmount}</p>
 
               <button
                 onClick={handlePaymentComplete}

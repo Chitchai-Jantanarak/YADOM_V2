@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import PageTransition from "../../components/layout/PageTransition"
 import { getCart, removeCartItem, updateCartItem } from "../../services/cartService"
-import { handleImageError } from "../../utils/imageUtils"
 import { X } from "lucide-react"
+import { getImageUrl, handleImageError } from "../../utils/imageUtils"
 
 const UserCart = () => {
   const [cartData, setCartData] = useState({ cartItems: [], total: 0 })
@@ -99,7 +99,10 @@ const UserCart = () => {
                       <div className="flex items-center">
                         <div className="w-20 h-20 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
                           <img
-                            src={`/src/assets/images/shop/${item.product.id}`}
+                            src={getImageUrl(
+                              `/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`,
+                              "product",
+                            )}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                             onError={(e) => handleImageError(e, "product")}
@@ -137,14 +140,13 @@ const UserCart = () => {
                     </td>
                     <td className="py-4 px-2">฿ {item.price.toFixed(2)}</td>
                     <button
-                        onClick={() => handleRemoveItem(item.id)}
-                        className="mr-4 text-gray-400 hover:text-red-500 transition-colors m-4"
-                        aria-label="Remove item"
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="mr-4 text-gray-400 hover:text-red-500 transition-colors m-4"
+                      aria-label="Remove item"
                     >
-                        <X size={18} />
+                      <X size={18} />
                     </button>
                   </tr>
-                  
                 ))}
               </tbody>
             </table>

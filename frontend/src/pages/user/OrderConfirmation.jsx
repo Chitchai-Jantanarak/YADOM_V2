@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import PageTransition from "../../components/layout/PageTransition"
 import { getOrderById } from "../../services/orderService"
+import { getImageUrl } from "../../utils/imageUtils"
 
 const OrderConfirmation = () => {
   const { orderId } = useParams()
@@ -113,7 +114,10 @@ const OrderConfirmation = () => {
                 <div key={item.id} className="flex items-start border-b pb-4">
                   <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
                     <img
-                      src={`/src/assets/images/shop/${item.product.id}`}
+                      src={getImageUrl(
+                        `/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`,
+                        "product",
+                      )}
                       alt={item.product.name}
                       className="w-full h-full object-cover"
                       onError={(e) => (e.target.src = "/src/assets/images/placeholder.png")}

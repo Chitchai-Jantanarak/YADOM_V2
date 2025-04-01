@@ -5,6 +5,8 @@ import { useParams, Link, useNavigate } from "react-router-dom"
 import PageTransition from "../../components/layout/PageTransition"
 import { getOrderById, getUserOrders, getAllOrders, updateOrderStatus } from "../../services/orderService"
 import { getCurrentUser } from "../../services/authService"
+import NavBar2 from "../../components/layout/NavBar2"
+import { getImageUrl } from "../../utils/imageUtils"
 
 const OrderSummary = () => {
   const { orderId } = useParams()
@@ -159,188 +161,194 @@ const OrderSummary = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">
-        {currentUser.role === "ADMIN" || currentUser.role === "OWNER" ? "All Orders" : "My Orders"}
-      </h1>
+    <div>
+      <NavBar2 />
+      <div className="container mx-auto">
+        <h1 className="text-3xl font-bold mb-6">
+          {currentUser.role === "ADMIN" || currentUser.role === "OWNER" ? "All Orders" : "My Orders"}
+        </h1>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-1">
-          <h2 className="text-xl font-semibold mb-4">Order History</h2>
-          <div className="bg-gray-50 rounded-lg overflow-hidden">
-            <div className="divide-y">
-              {orders.map((order) => (
-                <Link
-                  key={order.id}
-                  to={`/order/${order.id}`}
-                  className={`block p-4 hover:bg-gray-100 transition-colors ${
-                    selectedOrder && order.id === selectedOrder.id ? "bg-gray-100" : ""
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium">Order #{order.id}</p>
-                      {(currentUser.role === "ADMIN" || currentUser.role === "OWNER") && (
-                        <p className="text-xs text-gray-600">User: {order.user?.name || "Unknown"}</p>
-                      )}
-                      <p className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</p>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-1">
+            <h2 className="text-xl font-semibold mb-4">Order History</h2>
+            <div className="bg-gray-50 rounded-lg overflow-hidden">
+              <div className="divide-y">
+                {orders.map((order) => (
+                  <Link
+                    key={order.id}
+                    to={`/order/${order.id}`}
+                    className={`block p-4 hover:bg-gray-100 transition-colors ${
+                      selectedOrder && order.id === selectedOrder.id ? "bg-gray-100" : ""
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">Order #{order.id}</p>
+                        {(currentUser.role === "ADMIN" || currentUser.role === "OWNER") && (
+                          <p className="text-xs text-gray-600">User: {order.user?.name || "Unknown"}</p>
+                        )}
+                        <p className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div>{getStatusBadge(order.status)}</div>
                     </div>
-                    <div>{getStatusBadge(order.status)}</div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="md:col-span-2">
-          {selectedOrder ? (
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Order Details</h2>
-                <div>{getStatusBadge(selectedOrder.status)}</div>
-              </div>
-
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <div className="mb-4">
-                  <p className="font-medium">Order #{selectedOrder.id}</p>
-                  {(currentUser.role === "ADMIN" || currentUser.role === "OWNER") && (
-                    <p className="text-sm text-gray-600">Customer: {selectedOrder.user?.name || "Unknown"}</p>
-                  )}
-                  <p className="text-sm text-gray-600">
-                    Placed on: {new Date(selectedOrder.createdAt).toLocaleString()}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Last Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}
-                  </p>
+          <div className="md:col-span-2">
+            {selectedOrder ? (
+              <>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Order Details</h2>
+                  <div>{getStatusBadge(selectedOrder.status)}</div>
                 </div>
 
-                <div className="space-y-4 mb-6">
-                  {selectedOrder.cartItems.map((item) => (
-                    <div key={item.id} className="flex items-start border-b pb-4">
-                      <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
-                        <img
-                          src={`/src/assets/images/shop/${item.product.id}`}
-                          alt={item.product.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => (e.target.src = "/src/assets/images/placeholder.png")}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{item.product.name}</h3>
-                        {item.productColor && (
-                          <p className="text-sm text-gray-600">
-                            Color: {item.productColor.colorName || item.productColor.colorCode}
-                          </p>
-                        )}
-                        {item.aroma && <p className="text-sm text-gray-600">Scents: {item.aroma.name}</p>}
-                        <div className="flex justify-between mt-2">
-                          <span className="text-sm">Qty: {item.quantity}</span>
-                          <span className="font-medium">฿ {item.price.toFixed(2)}</span>
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <div className="mb-4">
+                    <p className="font-medium">Order #{selectedOrder.id}</p>
+                    {(currentUser.role === "ADMIN" || currentUser.role === "OWNER") && (
+                      <p className="text-sm text-gray-600">Customer: {selectedOrder.user?.name || "Unknown"}</p>
+                    )}
+                    <p className="text-sm text-gray-600">
+                      Placed on: {new Date(selectedOrder.createdAt).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Last Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    {selectedOrder.cartItems.map((item) => (
+                      <div key={item.id} className="flex items-start border-b pb-4">
+                        <div className="w-16 h-16 flex-shrink-0 mr-4 bg-gray-100 rounded-md overflow-hidden">
+                          <img
+                            src={getImageUrl(
+                              `/src/assets/images/shop/${item.product.id || "/placeholder.svg"}.png`,
+                              "product",
+                            )}
+                            alt={item.product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => (e.target.src = "/src/assets/images/placeholder.png")}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium">{item.product.name}</h3>
+                          {item.productColor && (
+                            <p className="text-sm text-gray-600">
+                              Color: {item.productColor.colorName || item.productColor.colorCode}
+                            </p>
+                          )}
+                          {item.aroma && <p className="text-sm text-gray-600">Scents: {item.aroma.name}</p>}
+                          <div className="flex justify-between mt-2">
+                            <span className="text-sm">Qty: {item.quantity}</span>
+                            <span className="font-medium">฿ {item.price.toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <div className="flex justify-between mb-2">
+                      <span>Subtotal:</span>
+                      <span>฿ {selectedOrder.cartItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</span>
                     </div>
-                  ))}
-                </div>
+                    <div className="flex justify-between mb-2">
+                      <span>Shipping:</span>
+                      <span>FREE</span>
+                    </div>
+                    <div className="flex justify-between font-bold">
+                      <span>Total:</span>
+                      <span>฿ {selectedOrder.cartItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</span>
+                    </div>
+                  </div>
 
-                <div className="border-t pt-4 mt-4">
-                  <div className="flex justify-between mb-2">
-                    <span>Subtotal:</span>
-                    <span>฿ {selectedOrder.cartItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span>Shipping:</span>
-                    <span>FREE</span>
-                  </div>
-                  <div className="flex justify-between font-bold">
-                    <span>Total:</span>
-                    <span>฿ {selectedOrder.cartItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</span>
-                  </div>
-                </div>
+                  {/* Only show action buttons to the customer who owns the order */}
+                  {currentUser.id === selectedOrder.userId && (
+                    <>
+                      {selectedOrder.status === "WAITING" && (
+                        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-yellow-800">
+                            Your order is waiting for payment. Please complete the payment to proceed.
+                          </p>
+                          <Link
+                            to={`/user/payment/${selectedOrder.id}`}
+                            className="mt-2 inline-block bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
+                          >
+                            Complete Payment
+                          </Link>
+                        </div>
+                      )}
 
-                {/* Only show action buttons to the customer who owns the order */}
-                {currentUser.id === selectedOrder.userId && (
-                  <>
-                    {selectedOrder.status === "WAITING" && (
-                      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-yellow-800">
-                          Your order is waiting for payment. Please complete the payment to proceed.
-                        </p>
-                        <Link
-                          to={`/user/payment/${selectedOrder.id}`}
-                          className="mt-2 inline-block bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
+                      {selectedOrder.status === "PENDING" && (
+                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-blue-800">Your payment has been received. We are processing your order.</p>
+                        </div>
+                      )}
+
+                      {selectedOrder.status === "CONFIRMED" && (
+                        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-green-800">
+                            Your order has been confirmed and is being prepared for shipping.
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedOrder.status === "COMPLETED" && (
+                        <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                          <p className="text-purple-800">
+                            Your order has been completed. Thank you for shopping with us!
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedOrder.status === "CANCELED" && (
+                        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-red-800">This order has been canceled.</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Admin/Owner actions */}
+                  {(currentUser.role === "ADMIN" || currentUser.role === "OWNER") && (
+                    <div className="mt-6 p-4 bg-gray-100 border border-gray-200 rounded-lg">
+                      <h3 className="font-medium mb-2">Admin Actions</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => handleUpdateStatus(selectedOrder.id, "CONFIRMED")}
+                          className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors disabled:bg-gray-400"
+                          disabled={selectedOrder.status === "CONFIRMED" || updatingStatus}
                         >
-                          Complete Payment
-                        </Link>
+                          Confirm Order
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(selectedOrder.id, "COMPLETED")}
+                          className="bg-purple-500 text-white px-3 py-1 rounded-md text-sm hover:bg-purple-600 transition-colors disabled:bg-gray-400"
+                          disabled={selectedOrder.status === "COMPLETED" || updatingStatus}
+                        >
+                          Mark as Completed
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(selectedOrder.id, "CANCELED")}
+                          className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600 transition-colors disabled:bg-gray-400"
+                          disabled={selectedOrder.status === "CANCELED" || updatingStatus}
+                        >
+                          Cancel Order
+                        </button>
                       </div>
-                    )}
-
-                    {selectedOrder.status === "PENDING" && (
-                      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-blue-800">Your payment has been received. We are processing your order.</p>
-                      </div>
-                    )}
-
-                    {selectedOrder.status === "CONFIRMED" && (
-                      <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-green-800">
-                          Your order has been confirmed and is being prepared for shipping.
-                        </p>
-                      </div>
-                    )}
-
-                    {selectedOrder.status === "COMPLETED" && (
-                      <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                        <p className="text-purple-800">
-                          Your order has been completed. Thank you for shopping with us!
-                        </p>
-                      </div>
-                    )}
-
-                    {selectedOrder.status === "CANCELED" && (
-                      <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-red-800">This order has been canceled.</p>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Admin/Owner actions */}
-                {(currentUser.role === "ADMIN" || currentUser.role === "OWNER") && (
-                  <div className="mt-6 p-4 bg-gray-100 border border-gray-200 rounded-lg">
-                    <h3 className="font-medium mb-2">Admin Actions</h3>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => handleUpdateStatus(selectedOrder.id, "CONFIRMED")}
-                        className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors disabled:bg-gray-400"
-                        disabled={selectedOrder.status === "CONFIRMED" || updatingStatus}
-                      >
-                        Confirm Order
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(selectedOrder.id, "COMPLETED")}
-                        className="bg-purple-500 text-white px-3 py-1 rounded-md text-sm hover:bg-purple-600 transition-colors disabled:bg-gray-400"
-                        disabled={selectedOrder.status === "COMPLETED" || updatingStatus}
-                      >
-                        Mark as Completed
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(selectedOrder.id, "CANCELED")}
-                        className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600 transition-colors disabled:bg-gray-400"
-                        disabled={selectedOrder.status === "CANCELED" || updatingStatus}
-                      >
-                        Cancel Order
-                      </button>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="bg-gray-50 p-6 rounded-lg flex items-center justify-center h-64">
+                <p className="text-gray-500">Select an order to view details</p>
               </div>
-            </>
-          ) : (
-            <div className="bg-gray-50 p-6 rounded-lg flex items-center justify-center h-64">
-              <p className="text-gray-500">Select an order to view details</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -225,15 +225,6 @@ const Home = () => {
                   <AdvancedApp />
                 </section>
 
-                <section className="h-lvh">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem architecto rerum delectus non quisquam
-                  ipsa, laborum id omnis quasi quibusdam eveniet? Ab quia illo veritatis ullam asperiores neque
-                  consequatur quos ut veniam sed ratione debitis, quis doloremque ducimus voluptatibus unde aut dolore
-                  praesentium cum laudantium eligendi dolorem a perferendis? Nemo quae rem corporis earum eum autem
-                  sapiente aut quo in, veritatis ipsam nobis doloremque nostrum magni culpa hic non corrupti nam vitae
-                  quis.
-                </section>
-
                 <TextCarousel
                   text={["REFRESHING AROMAS", "GET BOOSTED", "DON'T FEEL BAD, FEEL THE STYLE"]}
                   colorIndex={[2, 1, 3]}
