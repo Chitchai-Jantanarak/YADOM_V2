@@ -32,8 +32,8 @@ const ProductView = () => {
   const [selectedColor, setSelectedColor] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [addingToCart, setAddingToCart] = useState(false)
-  const [showLoginModal, setShowLoginModal] = useState(false)
   // Add these state variables inside the ProductView component after other useState declarations
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
   const { hasPendingOrder, pendingOrderId, isChecking } = useOrderCheck()
 

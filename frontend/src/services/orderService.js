@@ -36,6 +36,11 @@ export const updateOrderStatus = async (id, status) => {
   return response.data
 }
 
+export const confirmOrderPayment = async (id) => {
+  const response = await api.post(`/api/orders/${id}/payment`, {})
+  return response.data
+}
+
 export const deleteOrder = async (id) => {
   const response = await api.delete(`/api/orders/${id}`)
   return response.data

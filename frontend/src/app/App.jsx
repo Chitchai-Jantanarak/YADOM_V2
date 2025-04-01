@@ -26,6 +26,15 @@ import DashboardOrders from "../pages/dashboard/DashboardOrders.jsx"
 import DashboardProduct from "../pages/dashboard/DashboardProduct.jsx"
 import DashboardSettings from "../pages/dashboard/DashboardSettings.jsx"
 
+// Configurator Customer Pages
+import UserLayout from "../components/layout/UserLayout.jsx"
+import UserSettings from "../pages/user/UserSettings.jsx"
+import UserCart from "../pages/user/UserCart.jsx"
+import UserCheckout from "../pages/user/UserCheckout.jsx"
+import UserPayment from "../pages/user/UserPayment.jsx"
+import OrderConfirmation from "../pages/user/OrderConfirmation.jsx"
+import OrderSummary from "../pages/user/OrderSummary.jsx"
+
 import Unauthorized from "../pages/Unauthorized.jsx"
 import Forbidden from "../pages/Forbidden.jsx"
 
@@ -54,6 +63,75 @@ function App() {
           <Route path="/AboutSecent" element={<AboutSecent />} />
           <Route path="/AboutUs" element={<AboutUs />} />
           <Route path="/Contact" element={<Contact />} />
+
+          {/* User Configurator Route */}
+          <Route 
+            path="/user" 
+            element={
+              <ProtectedRoute requiredRoles={[ROLES.CUSTOMER]}>
+                <UserLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Default dashboard route */}
+            <Route index element={<Navigate to="/user/settings" replace />} />
+
+            <Route 
+              path="settings"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.CUSTOMER]}>
+                  <UserSettings />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route 
+              path="cart"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.CUSTOMER]}>
+                  <UserCart />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="checkout"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.CUSTOMER]}>
+                  <UserCheckout />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="payment/:orderId"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.CUSTOMER]}>
+                  <UserPayment />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="orders/:orderId"
+              element={
+                <ProtectedRoute requiredRoles={[ROLES.CUSTOMER]}>
+                  <OrderConfirmation />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          <Route 
+            path="order/:orderId"
+            element={
+              <ProtectedRoute requiredRoles={[ROLES.CUSTOMER, ROLES.ADMIN, ROLES.OWNER]}>
+                <OrderSummary />
+              </ProtectedRoute>
+            }
+          />
+
+
 
           {/* Shop Routes */}
           <Route path="/product" element={<Shop_Selection />} />

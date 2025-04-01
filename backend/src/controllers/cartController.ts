@@ -250,10 +250,13 @@ export const removeCartItem = async (req: Request, res: Response, next: NextFunc
       return next(ApiError.forbidden("Not authorized to remove this cart item"))
     }
 
-    // Soft delete
+    // Soft delete and set isUsed to false
     await prisma.cartItem.update({
       where: { id: Number.parseInt(id) },
-      data: { deletedAt: new Date() },
+      data: {
+        deletedAt: new Date(),
+        isUsed: false,
+      },
     })
 
     res.json({ message: "Cart item removed" })

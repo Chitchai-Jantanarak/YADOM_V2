@@ -582,7 +582,7 @@ const ModelConfigurator = () => {
             <button
               onClick={() => {
                 setShowNotificationModal(false)
-                navigate("/cart")
+                navigate("/user/cart")
               }}
               className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:opacity-90 transition-all shadow-md"
             >

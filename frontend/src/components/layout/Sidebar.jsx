@@ -1,11 +1,11 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import { Home, Package, Users, Settings, BarChart2, ShoppingBag } from "lucide-react"
 import { authService, ROLES, hasRole } from "../../services/authService"
 import UserAvatar from "../ui/UserAvatar"
 import Logo from "../ui/Logo"
-import { useEffect, useRef, useState } from "react"
 import { getUiAvatarUrl, getUserImageUrl } from "../../utils/imageUtils"
 import imageService from "../../services/imageService"
 

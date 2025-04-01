@@ -46,11 +46,14 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
       },
     })
 
-    // Update cart items with order ID
+    // Update cart items with order ID and set isUsed to false
     for (const item of cartItems) {
       await prisma.cartItem.update({
         where: { id: item.id },
-        data: { orderId: order.id },
+        data: {
+          orderId: order.id,
+          isUsed: false,
+        },
       })
     }
 
@@ -476,3 +479,83 @@ export const deleteOrder = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
+// @desc    Confirm order payment (customer only)
+// @route   POST /api/orders/:id/payment
+// @access  Private
+export const confirmOrderPayment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params
+
+    // Parse and validate the ID
+    let orderId: number
+    try {
+      orderId = parseId(id)
+    } catch (error) {
+      return next(error)
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    })
+
+    if (!order) {
+      return next(ApiError.notFound("Order not found"))
+    }
+
+    // Check if the user is authorized (must be the order owner)
+    if (req.user.id !== order.userId) {
+      return next(ApiError.forbidden("Not authorized to update this order"))
+    }
+
+    // Check if the order is in WAITING status
+    if (order.status !== "WAITING") {
+      return next(ApiError.badRequest("Order is not in WAITING status"))
+    }
+
+    // Update order status to PENDING
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: "PENDING",
+        updatedAt: new Date(),
+      },
+      include: {
+        user: true,
+        cartItems: {
+          include: {
+            product: true,
+            aroma: true,
+          },
+        },
+      },
+    })
+
+    const subtotal = updatedOrder.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+    const formattedOrder = {
+      id: updatedOrder.id,
+      userId: updatedOrder.userId,
+      user: updatedOrder.user,
+      cartItems: updatedOrder.cartItems.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.price,
+        aroma: item.aroma ? item.aroma.name : null,
+      })),
+      status: updatedOrder.status,
+      createdAt: updatedOrder.createdAt.toISOString(),
+      updatedAt: updatedOrder.updatedAt.toISOString(),
+      subtotal: subtotal,
+      total: subtotal,
+    }
+
+    res.json({
+      success: true,
+      message: `Payment confirmed for order ${id}`,
+      order: formattedOrder,
+    })
+  } catch (error) {
+    console.error("Error in confirmOrderPayment:", error)
+    next(error)
+  }
+}

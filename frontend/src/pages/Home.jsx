@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import NavBar2 from "../components/layout/NavBar2"
 import Underline from "../components/ui/Underline"
 import TextCarousel from "../components/ui/TextCarousel"
+import FAQ from "./FAQ"
 import AdvancedApp from "../components/experience/__test_v2"
 import Footer from "../components/layout/Footer"
 import Lenis from "lenis"
@@ -247,12 +248,7 @@ const Home = () => {
                   className="font-anybody"
                 />
 
-                <section className="h-lvh">
-                  Lorem ipsum dolor sit, amet consectetur adipisicing elit. Earum quasi at asperiores, sunt ducimus
-                  sint? Temporibus enim ab praesentium perspiciatis beatae officiis ratione nemo cumque fuga. Sed
-                  consectetur non repudiandae a voluptates harum, ipsam rem eum vel facilis ad ab dolorum amet aperiam
-                  possimus laboriosam eligendi voluptate ipsa sint ex dicta ducimus labore?
-                </section>
+                <FAQ />
                 <Footer carousel="true" />
               </div>
             </div>

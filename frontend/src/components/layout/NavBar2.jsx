@@ -116,7 +116,7 @@ const NavBar2 = () => {
 
   // Only add CART to menu items if user is authenticated
   if (user) {
-    menuItems.push({ name: "CART", link: "/cart", subHead: false, icon: ShoppingBag })
+    menuItems.push({ name: "CART", link: "/user/cart", subHead: false, icon: ShoppingBag })
   }
 
   // Only add LOGIN to menu items if user is not authenticated
@@ -334,8 +334,17 @@ const NavBar2 = () => {
                 {menuItemsRight.map((item, index) => (
                   <li key={index} className={menuItemStyle}>
                     <Link to={item.link} className={menuLinkStyle} onClick={() => handleLinkClick()}>
-                      <span className="relative z-10 select-none">{item.name}</span>
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-tertiary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
+                      {item.name === "LOGIN" ? (
+                        <>
+                        <span className="relative z-10 select-none text-blue-300">{item.name}</span>
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-tertiary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
+                        </>
+                      ) : (
+                        <>
+                        <span className="relative z-10 select-none">{item.name}</span>
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-tertiary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
+                        </>
+                      )} 
                     </Link>
                   </li>
                 ))}
@@ -373,6 +382,7 @@ const NavBar2 = () => {
                           />
                         )}
                       </div>
+                      <span className="text-blue-300">{user.name}</span>
                       <ChevronDown
                         className={`h-4 w-4 text-gray-600 transition-transform duration-300 ${isUserMenuOpen ? "rotate-180" : ""}`}
                       />
@@ -432,7 +442,7 @@ const NavBar2 = () => {
 
                           {/* Profile Settings */}
                           <Link
-                            to="/profile"
+                            to="/user/settings"
                             className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
@@ -442,7 +452,7 @@ const NavBar2 = () => {
 
                           {/* Account Settings */}
                           <Link
-                            to="/settings"
+                            to="/user/settings"
                             className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
